@@ -1,0 +1,27 @@
+[
+    {
+        "english": "Welding Rod",
+        "translation": "Sveisetråd / Elektrode",
+        "languageCode": "NO"
+    },
+    {
+        "english": "Heat Affected Zone (HAZ)",
+        "translation": "Varmepåvirket sone",
+        "languageCode": "NO"
+    },
+    {
+        "english": "Undercut",
+        "translation": "Innbrenning / Kantsår",
+        "languageCode": "NO"
+    },
+    {
+        "english": "Spatter",
+        "translation": "Sveisesprut",
+        "languageCode": "NO"
+    },
+    {
+        "english": "Shielding Gas",
+        "translation": "Dekkgass",
+        "languageCode": "NO"
+    }
+]
