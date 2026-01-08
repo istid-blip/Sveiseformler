@@ -85,3 +85,109 @@ extension View {
         self.modifier(CRTOverlay())
     }
 }
+// --- PASTE THIS AT THE BOTTOM OF RetroTheme.swift ---
+
+// 1. The Standard History Row (Used in Carbon Equivalent & Dictionary)
+struct RetroHistoryRow: View {
+    let item: SavedCalculation
+    let onDelete: () -> Void
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(item.name)
+                    .font(RetroTheme.font(size: 14, weight: .bold))
+                Text(item.timestamp.formatted(date: .numeric, time: .shortened))
+                    .font(RetroTheme.font(size: 10))
+                    .opacity(0.7)
+            }
+            
+            Spacer()
+            
+            Text(item.resultValue)
+                .font(RetroTheme.font(size: 14, weight: .bold))
+            
+            // Delete Button
+            Button(action: onDelete) {
+                Text("[DEL]")
+                    .font(RetroTheme.font(size: 12))
+                    .foregroundColor(.red) // Red for danger
+                    .padding(.leading, 10)
+            }
+        }
+        .padding()
+        .foregroundColor(RetroTheme.primary)
+        .overlay(
+            Rectangle().stroke(RetroTheme.dim, lineWidth: 1)
+        )
+    }
+}
+// --- ADD TO THE BOTTOM OF RetroTheme.swift ---
+
+struct RetroEquationBox: View {
+    let label: String
+    @Binding var value: String
+    
+    @FocusState private var isFocused: Bool
+    @State private var pendingClear: Bool = false // Tracks if the text is "selected"
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            TextField("", text: $value)
+                .focused($isFocused)
+                .font(RetroTheme.font(size: 16, weight: .bold))
+                // 1. Text Color: Cyan when selected, Green when typing
+                .foregroundColor(pendingClear ? Color.cyan : RetroTheme.primary)
+                // 2. Cursor Color: HIDDEN (Clear) when selected, Green when typing
+                .tint(pendingClear ? .clear : RetroTheme.primary)
+                .multilineTextAlignment(.center)
+                .keyboardType(.decimalPad)
+                .frame(minWidth: 45)
+                .padding(.vertical, 5)
+                .background(Color.black)
+                
+                // --- GLOW & BORDER ---
+                .overlay(
+                    Rectangle()
+                        .stroke(isFocused ? RetroTheme.primary : RetroTheme.primary.opacity(0.5),
+                                lineWidth: isFocused ? 2 : 1)
+                )
+                .shadow(color: isFocused ? RetroTheme.primary.opacity(0.8) : .clear, radius: 8)
+                
+                // --- ACTIVATION LOGIC ---
+                .onChange(of: isFocused) { _, focused in
+                    if focused {
+                        pendingClear = true
+                    } else {
+                        pendingClear = false
+                    }
+                }
+                
+                // --- TYPING LOGIC ---
+                .onChange(of: value) { oldValue, newValue in
+                    if isFocused && pendingClear {
+                        if newValue != oldValue {
+                            pendingClear = false
+                            
+                            if newValue.count > oldValue.count {
+                                // User TYPED a new number -> Keep only new input
+                                let newContent = String(newValue.dropFirst(oldValue.count))
+                                value = newContent
+                            } else {
+                                // User hit BACKSPACE -> Clear everything
+                                value = ""
+                            }
+                        }
+                    }
+                }
+
+            Text(label)
+                .font(RetroTheme.font(size: 10))
+                .foregroundColor(isFocused ? RetroTheme.primary : RetroTheme.dim)
+                .padding(.top, 4)
+                .shadow(color: isFocused ? RetroTheme.primary.opacity(0.5) : .clear, radius: 4)
+        }
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isFocused)
+    }
+}
