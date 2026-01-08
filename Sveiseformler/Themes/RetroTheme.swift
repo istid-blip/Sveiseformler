@@ -60,17 +60,23 @@ struct CRTOverlay: ViewModifier {
             
             content
             
-            // The Scanlines
-            VStack(spacing: 0) {
-                ForEach(0..<100, id: \.self) { _ in
-                    Color.black.opacity(0.2)
-                        .frame(height: 2)
-                        .frame(maxWidth: .infinity)
-                    Spacer().frame(height: 2)
-                }
+            // The Scanlines (Optimized with Canvas)
+            Scanlines()
+                .ignoresSafeArea()
+                .allowsHitTesting(false) // Let touches pass through
+        }
+    }
+}
+
+// A highly optimized view that draws lines using the GPU
+struct Scanlines: View {
+    var body: some View {
+        Canvas { context, size in
+            // Tegn en linje hver 4. piksel (2px linje, 2px mellomrom)
+            for y in stride(from: 0, to: size.height, by: 4) {
+                let rect = CGRect(x: 0, y: y, width: size.width, height: 2)
+                context.fill(Path(rect), with: .color(.black.opacity(0.2)))
             }
-            .ignoresSafeArea()
-            .allowsHitTesting(false) // Let touches pass through
         }
     }
 }
@@ -129,52 +135,45 @@ struct RetroEquationBox: View {
     @Binding var value: String
     
     @FocusState private var isFocused: Bool
-    @State private var pendingClear: Bool = false // Tracks if the text is "selected"
+    @State private var pendingClear: Bool = false
     
     var body: some View {
         VStack(spacing: 0) {
             TextField("", text: $value)
                 .focused($isFocused)
                 .font(RetroTheme.font(size: 16, weight: .bold))
-                // 1. Text Color: Cyan when selected, Green when typing
-                .foregroundColor(pendingClear ? Color.cyan : RetroTheme.primary)
-                // 2. Cursor Color: HIDDEN (Clear) when selected, Green when typing
-                .tint(pendingClear ? .clear : RetroTheme.primary)
+                // Forenklet fargebruk: Alltid primærfarge
+                .foregroundColor(RetroTheme.primary)
+                .tint(RetroTheme.primary)
                 .multilineTextAlignment(.center)
                 .keyboardType(.decimalPad)
                 .frame(minWidth: 45)
                 .padding(.vertical, 5)
+                // Solid svart bakgrunn er raskere å tegne
                 .background(Color.black)
                 
-                // --- GLOW & BORDER ---
+                // --- OPTIMALISERT RAMME (Ingen skygge) ---
                 .overlay(
                     Rectangle()
-                        .stroke(isFocused ? RetroTheme.primary : RetroTheme.primary.opacity(0.5),
-                                lineWidth: isFocused ? 2 : 1)
+                        // Kun enkel fargeendring, ingen glød/skygge
+                        .stroke(isFocused ? RetroTheme.primary : RetroTheme.dim,
+                                lineWidth: 1) // Konstant tykkelse er også raskere
                 )
-                .shadow(color: isFocused ? RetroTheme.primary.opacity(0.8) : .clear, radius: 8)
                 
-                // --- ACTIVATION LOGIC ---
+                // --- BEHOLD LOGIKKEN (Den er bra!) ---
                 .onChange(of: isFocused) { _, focused in
-                    if focused {
-                        pendingClear = true
-                    } else {
-                        pendingClear = false
-                    }
+                    if focused { pendingClear = true }
                 }
-                
-                // --- TYPING LOGIC ---
                 .onChange(of: value) { oldValue, newValue in
                     if isFocused && pendingClear {
                         if newValue != oldValue {
                             pendingClear = false
-                            
                             if newValue.count > oldValue.count {
-                                // User TYPED a new number -> Keep only new input
+                                // Bruker skrev noe nytt -> erstatt alt
                                 let newContent = String(newValue.dropFirst(oldValue.count))
                                 value = newContent
                             } else {
-                                // User hit BACKSPACE -> Clear everything
+                                // Bruker trykket backspace -> slett alt
                                 value = ""
                             }
                         }
@@ -185,9 +184,8 @@ struct RetroEquationBox: View {
                 .font(RetroTheme.font(size: 10))
                 .foregroundColor(isFocused ? RetroTheme.primary : RetroTheme.dim)
                 .padding(.top, 4)
-                .shadow(color: isFocused ? RetroTheme.primary.opacity(0.5) : .clear, radius: 4)
+                // Fjernet shadow her også
         }
-        .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isFocused)
+        // Fjernet scaleEffect og animation
     }
 }

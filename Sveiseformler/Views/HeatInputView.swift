@@ -147,14 +147,19 @@ struct HeatInputView: View {
                             }
                             
                             if !history.isEmpty {
-                                Text("> RECENT LOGS")
-                                    .font(RetroTheme.font(size: 14, weight: .bold))
-                                    .foregroundColor(RetroTheme.primary)
-                                
-                                ForEach(history.prefix(5)) { item in
-                                    RetroHistoryRow(item: item) { deleteItem(item) }
-                                }
-                            }
+                                                    Text("> SYSTEM LOGS")
+                                                        .font(RetroTheme.font(size: 14, weight: .bold))
+                                                        .foregroundColor(RetroTheme.primary)
+                                                    
+                                                    // HER skjer optimaliseringen:
+                                                    // 1. LazyVStack gjør at den kun tegner det du ser på skjermen.
+                                                    // 2. Vi fjernet ".prefix(5)" så nå kan du lagre 1000 ting uten at appen blir treg.
+                                                    LazyVStack(spacing: 12) {
+                                                        ForEach(history) { item in
+                                                            RetroHistoryRow(item: item) { deleteItem(item) }
+                                                        }
+                                                    }
+                                                }
                         }
                         .padding(.horizontal)
                     }
