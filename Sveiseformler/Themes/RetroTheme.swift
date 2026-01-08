@@ -189,3 +189,85 @@ struct RetroEquationBox: View {
         // Fjernet scaleEffect og animation
     }
 }
+// --- RETRO ROLLING PICKER COMPONENTS ---
+
+// 1. Selve knappen man trykker på for å åpne hjulet
+struct RollingInputButton: View {
+    let label: String
+    let value: Double
+    var precision: Int = 1
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 0) {
+                Text(String(format: "%.\(precision)f", value))
+                    .font(RetroTheme.font(size: 18, weight: .bold))
+                    .foregroundColor(RetroTheme.primary)
+                    .padding(.vertical, 8)
+                    .frame(minWidth: 60)
+                    .background(Color.black)
+                    // Enkel ramme (raskere enn glød/skygge)
+                    .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
+                
+                Text(label)
+                    .font(RetroTheme.font(size: 10))
+                    .foregroundColor(RetroTheme.dim)
+                    .padding(.top, 4)
+            }
+        }
+    }
+}
+
+// 2. Popup-arket med hjulet (Picker)
+struct RollingPickerSheet: View {
+    let title: String
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+    let onDismiss: () -> Void
+    
+    var body: some View {
+        ZStack {
+            // Bakgrunn
+            Color.black.ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                // Header med tittel og Done-knapp
+                HStack {
+                    Text(title)
+                        .font(RetroTheme.font(size: 16, weight: .bold))
+                        .foregroundColor(RetroTheme.primary)
+                    Spacer()
+                    Button("DONE") {
+                        onDismiss()
+                    }
+                    .font(RetroTheme.font(size: 14, weight: .bold))
+                    .foregroundColor(RetroTheme.primary)
+                    .padding(8)
+                    .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
+                }
+                .padding()
+                
+                Spacer()
+                
+                // Selve hjulet
+                // Vi bruker stride for å lage listen med tall basert på 'step'
+                Picker("Value", selection: $value) {
+                    ForEach(Array(stride(from: range.lowerBound, through: range.upperBound, by: step)), id: \.self) { num in
+                        Text(String(format: step < 1 ? "%.1f" : "%.0f", num))
+                            .font(RetroTheme.font(size: 24, weight: .bold))
+                            .foregroundColor(RetroTheme.primary)
+                            .tag(num)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .colorScheme(.dark) // Tvinger mørk modus på hjulet
+                
+                Spacer()
+            }
+        }
+        .presentationDetents([.height(300)]) // Dekker bare nedre del av skjermen
+        .presentationDragIndicator(.visible)
+    }
+}
