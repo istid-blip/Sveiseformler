@@ -326,6 +326,7 @@
 
     },
     "k-factor: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -405,7 +406,11 @@
         }
       }
     },
+    "RECENT PASS (kJ/mm)" : {
+
+    },
     "RESULT (kJ/mm)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {

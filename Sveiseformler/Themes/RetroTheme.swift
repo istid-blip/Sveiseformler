@@ -259,7 +259,7 @@ struct RollingPickerSheet: View {
                 Picker("Value", selection: $value) {
                     ForEach(Array(stride(from: range.lowerBound, through: range.upperBound, by: step)), id: \.self) { num in
                         Text(String(format: step < 1 ? "%.1f" : "%.0f", num))
-                            .font(RetroTheme.font(size: 24, weight: .bold))
+                            .font(RetroTheme.font(size: 30, weight: .bold))
                             .foregroundColor(RetroTheme.primary)
                             .tag(num)
                     }
@@ -270,7 +270,7 @@ struct RollingPickerSheet: View {
                 Spacer()
             }
         }
-        .presentationDetents([.height(300)]) // Dekker bare nedre del av skjermen
+        .presentationDetents([.height(400)]) // Dekker bare nedre del av skjermen
         .presentationDragIndicator(.visible)
     }
 }

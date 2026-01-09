@@ -85,7 +85,7 @@ struct HeatInputView: View {
                 }
                 .padding()
                 
-                ScrollView {
+                
                     VStack(spacing: 25) {
                         
                         // --- TOP SECTION: PROCESS (LEFT) & RESULT (RIGHT) ---
@@ -124,7 +124,7 @@ struct HeatInputView: View {
                                         .foregroundColor(RetroTheme.dim)
                                     }
                                     .padding(10)
-                                    .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
+                                    .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1.5))
                                     .foregroundColor(RetroTheme.primary)
                                 }
                             }
@@ -132,7 +132,7 @@ struct HeatInputView: View {
                             
                             // RIGHT: Result Display
                             VStack(alignment: .trailing, spacing: 5) {
-                                Text("RESULT (kJ/mm)")
+                                Text("RECENT PASS (kJ/mm)")
                                     .font(RetroTheme.font(size: 10))
                                     .foregroundColor(RetroTheme.dim)
                                 
@@ -142,23 +142,42 @@ struct HeatInputView: View {
                                     .shadow(color: RetroTheme.primary.opacity(0.5), radius: 5)
                                     .minimumScaleFactor(0.8)
                                 
-                                Text("k-factor: \(String(format: "%.1f", efficiency))")
-                                    .font(RetroTheme.font(size: 10))
-                                    .foregroundColor(RetroTheme.dim)
+                               // Text("k-factor: \(String(format: "%.1f", efficiency))")
+                                 //   .font(RetroTheme.font(size: 10))
+                                   // .foregroundColor(RetroTheme.dim)
                             }
-                            .frame(minWidth: 100, alignment: .trailing)
+                            .frame(minWidth: 175, alignment: .trailing)
                         }
                         .padding(.horizontal)
 
                         // --- THE VISUAL FORMULA (INTERACTIVE) ---
-                        // Nå med RollingInputButton i stedet for tekstfelt
                         VStack(spacing: 15) {
                             HStack(alignment: .center, spacing: 8) {
+                                
+                                // Faktor k (Visuell)
+                                VStack(spacing: 0) {
+                                    Text(String(format: "%.1f", efficiency))
+                                        .font(RetroTheme.font(size: 20, weight: .bold))
+                                        .foregroundColor(RetroTheme.primary)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
+                                    
+                                    Text("k")
+                                        .font(RetroTheme.font(size: 10))
+                                        .foregroundColor(RetroTheme.dim)
+                                        .padding(.top, 4)
+                                }
+                                
+                                // Multiplikator
+                                Text("×").font(RetroTheme.font(size: 20)).foregroundColor(RetroTheme.primary)
                                 
                                 // Brøken
                                 VStack(spacing: 4) {
                                     // Teller: Volt * Ampere * 60
                                     HStack(alignment: .bottom, spacing: 6) {
+                                        
+                                       
                                         
                                         // VOLT KNAPP
                                         RollingInputButton(
@@ -225,23 +244,9 @@ struct HeatInputView: View {
                                     }
                                 }
                                 
-                                // Multiplikator
-                                Text("×").font(RetroTheme.font(size: 20)).foregroundColor(RetroTheme.primary)
+                               
                                 
-                                // Faktor k (Visuell)
-                                VStack(spacing: 0) {
-                                    Text(String(format: "%.1f", efficiency))
-                                        .font(RetroTheme.font(size: 20, weight: .bold))
-                                        .foregroundColor(RetroTheme.primary)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
-                                    
-                                    Text("k")
-                                        .font(RetroTheme.font(size: 10))
-                                        .foregroundColor(RetroTheme.dim)
-                                        .padding(.top, 4)
-                                }
+                                
                             }
                         }
                         .padding()
@@ -249,6 +254,7 @@ struct HeatInputView: View {
                         .padding(.horizontal)
                         
                         // --- SAVE & LOGS ---
+                        ScrollView {
                         VStack(alignment: .leading, spacing: 15) {
                             HStack {
                                 TextField("ID (e.g. Root Pass)...", text: $customName)
