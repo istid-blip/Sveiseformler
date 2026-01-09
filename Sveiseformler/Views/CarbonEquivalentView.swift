@@ -79,10 +79,10 @@ struct CarbonEquivalentView: View {
                         VStack(alignment: .leading, spacing: 20) {
                             // Row 1: C + (Mn / 6)
                             HStack(alignment: .center, spacing: 10) {
-                                RetroEquationBox(label: "C", value: $c).focused($focusedField, equals: .c)
+                                EquationInput(label: "C", text: $c, field: .c, focusedField: $focusedField)
                                 Text("+").foregroundColor(RetroTheme.dim)
                                 VStack(spacing: 2) {
-                                    RetroEquationBox(label: "Mn", value: $mn).focused($focusedField, equals: .mn)
+                                    EquationInput(label: "Mn", text: $mn, field: .mn, focusedField: $focusedField)
                                     Rectangle().fill(RetroTheme.primary).frame(height: 2)
                                     Text("6").font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.dim)
                                 }.frame(width: 60)
@@ -93,11 +93,11 @@ struct CarbonEquivalentView: View {
                                 Text("+").foregroundColor(RetroTheme.dim)
                                 VStack(spacing: 2) {
                                     HStack(spacing: 5) {
-                                        RetroEquationBox(label: "Cr", value: $cr).focused($focusedField, equals: .cr)
+                                        EquationInput(label: "Cr", text: $cr, field: .cr, focusedField: $focusedField)
                                         Text("+").foregroundColor(RetroTheme.dim)
-                                        RetroEquationBox(label: "Mo", value: $mo).focused($focusedField, equals: .mo)
+                                        EquationInput(label: "Mo", text: $mo, field: .mo, focusedField: $focusedField)
                                         Text("+").foregroundColor(RetroTheme.dim)
-                                        RetroEquationBox(label: "V", value: $v).focused($focusedField, equals: .v)
+                                        EquationInput(label: "V", text: $v, field: .v, focusedField: $focusedField)
                                     }
                                     Rectangle().fill(RetroTheme.primary).frame(height: 2)
                                     Text("5").font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.dim)
@@ -109,9 +109,9 @@ struct CarbonEquivalentView: View {
                                 Text("+").foregroundColor(RetroTheme.dim)
                                 VStack(spacing: 2) {
                                     HStack(spacing: 5) {
-                                        RetroEquationBox(label: "Ni", value: $ni).focused($focusedField, equals: .ni)
+                                        EquationInput(label: "Ni", text: $ni, field: .ni, focusedField: $focusedField)
                                         Text("+").foregroundColor(RetroTheme.dim)
-                                        RetroEquationBox(label: "Cu", value: $cu).focused($focusedField, equals: .cu)
+                                        EquationInput(label: "Cu", text: $cu, field: .cu, focusedField: $focusedField)
                                     }
                                     Rectangle().fill(RetroTheme.primary).frame(height: 2)
                                     Text("15").font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.dim)
@@ -131,6 +131,7 @@ struct CarbonEquivalentView: View {
                                     .foregroundColor(RetroTheme.primary)
                                     .padding(10)
                                     .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
+                                    .tint(RetroTheme.primary)
                                 
                                 Button(action: saveItem) {
                                     Text("SAVE")
@@ -191,6 +192,8 @@ struct CarbonEquivalentView: View {
         }
     }
     
+    // --- Logic Helpers ---
+    
     private func moveFocusForward() {
         guard let current = focusedField else { return }
         let allCases = Field.allCases
@@ -218,5 +221,50 @@ struct CarbonEquivalentView: View {
         withAnimation {
             modelContext.delete(item)
         }
+    }
+}
+
+// --- Local Helpers ---
+
+// En tilpasset input-boks som fungerer med FocusState-navigasjonen i denne filen
+struct EquationInput: View {
+    let label: String
+    @Binding var text: String
+    let field: CarbonEquivalentView.Field
+    @FocusState.Binding var focusedField: CarbonEquivalentView.Field?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            TextField("", text: $text)
+                .focused($focusedField, equals: field)
+                .keyboardType(.decimalPad)
+                .font(RetroTheme.font(size: 16, weight: .bold))
+                .foregroundColor(RetroTheme.primary)
+                .tint(RetroTheme.primary)
+                .multilineTextAlignment(.center)
+                .frame(minWidth: 45)
+                .padding(.vertical, 5)
+                .background(Color.black)
+                .overlay(
+                    Rectangle()
+                        .stroke(focusedField == field ? RetroTheme.primary : RetroTheme.dim, lineWidth: 1)
+                )
+
+            Text(label)
+                .font(RetroTheme.font(size: 10))
+                .foregroundColor(focusedField == field ? RetroTheme.primary : RetroTheme.dim)
+                .padding(.top, 4)
+        }
+    }
+}
+
+// --- Extensions ---
+
+// Denne fikser feilen med "value of type 'String' has no member 'toDouble'"
+extension String {
+    var toDouble: Double {
+        // Erstatter komma med punktum og konverterer til Double
+        let cleanString = self.replacingOccurrences(of: ",", with: ".")
+        return Double(cleanString) ?? 0.0
     }
 }

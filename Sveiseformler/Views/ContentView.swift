@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     
-    // Hide the default nav bar to keep the retro look
+    // Setter opp retro-stil på navigasjonsbaren
     init() {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.green, .font: UIFont.monospacedSystemFont(ofSize: 30, weight: .bold)]
         UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor.green, .font: UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)]
@@ -13,16 +13,22 @@ struct ContentView: View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
                 
-                // ASCII Header
-                Text("""
-                 __        __   _     _ 
-                 \\ \\      / /__| | __| |
-                  \\ \\ /\\ / / _ \\ |/ _` |
-                   \\ V  V /  __/ | (_| |
-                    \\_/\\_/ \\___|_|\\__,_|
-                """)
-                .font(RetroTheme.font(size: 12))
-                .foregroundColor(RetroTheme.primary)
+                VStack {
+                    // VIKTIG: "verbatim:" forteller SwiftUI at den skal ignorere Markdown-koder som _ og *
+                    Text(verbatim: """
+                     ___  _  _  ___  _  ___ 
+                    / __|| || || __|| |/ __|
+                    \\__ \\| \\/ || _| | |\\__ \\
+                    |___/ \\__/ |___||_||___/
+                    """)
+                    // Vi bruker "Menlo-Bold" fordi den er 100% monospaced på alle iOS-enheter
+                    .font(.custom("Menlo-Bold", size: 12))
+                    .lineSpacing(2)
+                    .foregroundColor(RetroTheme.primary)
+                    .multilineTextAlignment(.leading) // Sørger for at tegnene treffer hverandre vertikalt
+                    .fixedSize(horizontal: false, vertical: true) // Hindrer at teksten blir kuttet
+                }
+                .frame(maxWidth: .infinity) // Sentrerer selve blokken på skjermen
                 .padding(.bottom, 20)
                 
                 Text("SYSTEM STATUS: ONLINE")
@@ -32,7 +38,7 @@ struct ContentView: View {
                 
                 Divider().background(RetroTheme.primary)
 
-                // Menu Items
+                // Menyvalg - Kun de 3 kalkulatorene
                 Group {
                     NavigationLink(destination: HeatInputView()) {
                         TerminalMenuItem(label: "1. HEAT INPUT CALC")
@@ -42,8 +48,8 @@ struct ContentView: View {
                         TerminalMenuItem(label: "2. CARBON EQUIV.")
                     }
                     
-                    NavigationLink(destination: DictionaryView()) {
-                        TerminalMenuItem(label: "3. DICTIONARY (DB)")
+                    NavigationLink(destination: DepositionRateView()) {
+                        TerminalMenuItem(label: "3. DEPOSITION RATE")
                     }
                 }
                 
@@ -55,14 +61,14 @@ struct ContentView: View {
                     .opacity(0.8)
             }
             .padding()
-            .crtScreen() // Apply the background and scanlines
+            .crtScreen() // Legger på den grønne bakgrunnen og scanlines
         }
-        .accentColor(RetroTheme.primary) // Color the back arrows green
+        .accentColor(RetroTheme.primary) // Gjør at tilbake-piler blir grønne
         .preferredColorScheme(.dark)
     }
 }
 
-// A helper view for the menu buttons
+// Hjelpevisning for menyknappene
 struct TerminalMenuItem: View {
     let label: String
     var body: some View {
@@ -74,7 +80,7 @@ struct TerminalMenuItem: View {
                 .font(RetroTheme.font(size: 12))
         }
         .padding()
-        .border(RetroTheme.primary, width: 1) // Simple border
+        .border(RetroTheme.primary, width: 1)
         .foregroundColor(RetroTheme.primary)
     }
 }

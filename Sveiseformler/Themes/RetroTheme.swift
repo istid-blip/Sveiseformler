@@ -1,5 +1,7 @@
 import SwiftUI
+import SwiftData
 
+// MARK: - Core Theme Definitions
 struct RetroTheme {
     // The Classic "Phosphor Green"
     static let primary = Color(red: 0.2, green: 1.0, blue: 0.3)
@@ -14,8 +16,9 @@ struct RetroTheme {
     }
 }
 
-// MARK: - Custom Modifiers
+// MARK: - View Modifiers
 
+// A generic retro box border
 struct RetroBox: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -25,29 +28,6 @@ struct RetroBox: ViewModifier {
                 Rectangle()
                     .stroke(RetroTheme.primary, lineWidth: 2)
             )
-    }
-}
-
-// --- THIS IS THE FIX ---
-// Changed "ViewStyle" to "ButtonStyle"
-struct RetroButton: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(RetroTheme.font(size: 18, weight: .bold))
-            // Text color logic
-            .foregroundColor(configuration.isPressed ? RetroTheme.background : RetroTheme.primary)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(
-                // Background color logic: Invert when pressed
-                configuration.isPressed ? RetroTheme.primary : RetroTheme.background
-            )
-            .overlay(
-                Rectangle()
-                    .stroke(RetroTheme.primary, lineWidth: 2)
-            )
-            // Optional: Scale effect for better feedback
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
     }
 }
 
@@ -81,7 +61,31 @@ struct Scanlines: View {
     }
 }
 
-// Extension to make it easy to use
+// MARK: - Button Styles
+
+struct RetroButton: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(RetroTheme.font(size: 18, weight: .bold))
+            // Text color logic
+            .foregroundColor(configuration.isPressed ? RetroTheme.background : RetroTheme.primary)
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(
+                // Background color logic: Invert when pressed
+                configuration.isPressed ? RetroTheme.primary : RetroTheme.background
+            )
+            .overlay(
+                Rectangle()
+                    .stroke(RetroTheme.primary, lineWidth: 2)
+            )
+            // Optional: Scale effect for better feedback
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+    }
+}
+
+// MARK: - Extensions
+
 extension View {
     func retroStyle() -> some View {
         self.modifier(RetroBox())
@@ -91,9 +95,10 @@ extension View {
         self.modifier(CRTOverlay())
     }
 }
-// --- PASTE THIS AT THE BOTTOM OF RetroTheme.swift ---
 
-// 1. The Standard History Row (Used in Carbon Equivalent & Dictionary)
+// MARK: - Specialized Retro Components
+
+// 1. The Standard History Row (Used in all Calculators)
 struct RetroHistoryRow: View {
     let item: SavedCalculation
     let onDelete: () -> Void
@@ -128,8 +133,8 @@ struct RetroHistoryRow: View {
         )
     }
 }
-// --- ADD TO THE BOTTOM OF RetroTheme.swift ---
 
+// 2. Custom Input Box with Smart Focus Logic
 struct RetroEquationBox: View {
     let label: String
     @Binding var value: String
@@ -157,7 +162,7 @@ struct RetroEquationBox: View {
                     Rectangle()
                         // Kun enkel fargeendring, ingen glød/skygge
                         .stroke(isFocused ? RetroTheme.primary : RetroTheme.dim,
-                                lineWidth: 1) // Konstant tykkelse er også raskere
+                                lineWidth: 1)
                 )
                 
                 // --- BEHOLD LOGIKKEN (Den er bra!) ---
@@ -184,14 +189,13 @@ struct RetroEquationBox: View {
                 .font(RetroTheme.font(size: 10))
                 .foregroundColor(isFocused ? RetroTheme.primary : RetroTheme.dim)
                 .padding(.top, 4)
-                // Fjernet shadow her også
         }
-        // Fjernet scaleEffect og animation
     }
 }
-// --- RETRO ROLLING PICKER COMPONENTS ---
 
-// 1. Selve knappen man trykker på for å åpne hjulet
+// 3. Retro Rolling Picker Components
+
+// 3a. Selve knappen man trykker på for å åpne hjulet
 struct RollingInputButton: View {
     let label: String
     let value: Double
@@ -219,7 +223,7 @@ struct RollingInputButton: View {
     }
 }
 
-// 2. Popup-arket med hjulet (Picker)
+// 3b. Popup-arket med hjulet (Picker)
 struct RollingPickerSheet: View {
     let title: String
     @Binding var value: Double
@@ -252,7 +256,6 @@ struct RollingPickerSheet: View {
                 Spacer()
                 
                 // Selve hjulet
-                // Vi bruker stride for å lage listen med tall basert på 'step'
                 Picker("Value", selection: $value) {
                     ForEach(Array(stride(from: range.lowerBound, through: range.upperBound, by: step)), id: \.self) { num in
                         Text(String(format: step < 1 ? "%.1f" : "%.0f", num))
