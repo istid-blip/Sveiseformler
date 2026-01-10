@@ -55,7 +55,7 @@ struct Scanlines: View {
             // Tegn en linje hver 4. piksel (2px linje, 2px mellomrom)
             for y in stride(from: 0, to: size.height, by: 4) {
                 let rect = CGRect(x: 0, y: y, width: size.width, height: 2)
-                context.fill(Path(rect), with: .color(.black.opacity(0.2)))
+                context.fill(Path(rect), with: .color(.black.opacity(0.1)))
             }
         }
     }
@@ -63,26 +63,30 @@ struct Scanlines: View {
 
 // MARK: - Button Styles
 
-struct RetroButton: ButtonStyle {
+struct RetroButton: ButtonStyle { // Blir denne structen brukt noen plass?
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(RetroTheme.font(size: 18, weight: .bold))
-            // Text color logic
             .foregroundColor(configuration.isPressed ? RetroTheme.background : RetroTheme.primary)
             .padding()
             .frame(maxWidth: .infinity)
             .background(
-                // Background color logic: Invert when pressed
                 configuration.isPressed ? RetroTheme.primary : RetroTheme.background
             )
             .overlay(
                 Rectangle()
                     .stroke(RetroTheme.primary, lineWidth: 2)
             )
-            // Optional: Scale effect for better feedback
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .onChange(of: configuration.isPressed) { _, isPressed in
+                if isPressed {
+                    Haptics.play(.light) // NYTT: Bruker Haptics service
+                }
+            }
     }
 }
+
+
 
 // MARK: - Extensions
 
@@ -234,7 +238,10 @@ struct RollingInputButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            action()
+            Haptics.play(.light) // NYTT
+        }) {
             VStack(spacing: 0) {
                 Text(String(format: "%.\(precision)f", value))
                     .font(RetroTheme.font(size: 18, weight: .bold))
@@ -267,7 +274,7 @@ struct RollingPickerSheet: View {
             // Bakgrunn
             Color.black.ignoresSafeArea()
             
-            VStack(spacing: 20) {
+            VStack {
                 // Header med tittel og Done-knapp
                 HStack {
                     Text(title)
@@ -290,7 +297,7 @@ struct RollingPickerSheet: View {
                 Picker("Value", selection: $value) {
                     ForEach(Array(stride(from: range.lowerBound, through: range.upperBound, by: step)), id: \.self) { num in
                         Text(String(format: step < 1 ? "%.1f" : "%.0f", num))
-                            .font(RetroTheme.font(size: 30, weight: .bold))
+                            .font(RetroTheme.font(size: 35, weight: .bold))
                             .foregroundColor(RetroTheme.primary)
                             .tag(num)
                     }
@@ -301,11 +308,11 @@ struct RollingPickerSheet: View {
                 Spacer()
             }
         }
-        .presentationDetents([.height(400)]) // Dekker bare nedre del av skjermen
+        .presentationDetents([.height(350)]) // Dekker bare nedre del av skjermen
         .presentationDragIndicator(.visible)
     }
 }
-// I RetroTheme.swift
+
 
 struct RetroDropdown<T: Identifiable & Equatable>: View {
     let title: String
@@ -324,7 +331,7 @@ struct RetroDropdown<T: Identifiable & Equatable>: View {
                 isExpanded.toggle()
             }
             if isExpanded {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                Haptics.play(.light)
             }
         }) {
             HStack {

@@ -254,14 +254,14 @@ struct HeatInputView: View {
         amperageStr = process.defaultAmperage
         if timeStr.isEmpty { timeStr = "60" }
         if lengthStr.isEmpty { lengthStr = "300" }
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Haptics.play(.light)
     }
     
     func startNewSession() {
         activeJobID = nil
         passCounter = 1
         currentJobName = ""
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        Haptics.play(.medium)
     }
     
     func logPass() {
