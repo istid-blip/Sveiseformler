@@ -21,7 +21,6 @@ struct HeatInputView: View {
     private var history: [SavedCalculation]
     
     // --- State for Rullevelger (Picker) ---
-    // En enum for å vite hvilket hjul som skal vises
     enum InputType: Identifiable {
         case voltage, amperage, speed
         var id: Int { hashValue }
@@ -30,7 +29,6 @@ struct HeatInputView: View {
     
     // --- Lagret Data ---
     @AppStorage("heat_selected_process_name") private var selectedProcessName: String = "MAG / FCAW"
-    // Vi lagrer som String for kompatibilitet, men konverterer til Double for rullehjulet
     @AppStorage("heat_voltage") private var voltageStr: String = ""
     @AppStorage("heat_amperage") private var amperageStr: String = ""
     @AppStorage("heat_travelSpeed") private var travelSpeedStr: String = ""
@@ -84,177 +82,153 @@ struct HeatInputView: View {
                         .foregroundColor(RetroTheme.primary)
                 }
                 .padding()
+                .zIndex(1) // Header ligger lavt
                 
-                
-                    VStack(spacing: 25) {
+                VStack(spacing: 25) {
+                    
+                    // --- TOP SECTION: PROCESS (LEFT) & RESULT (RIGHT) ---
+                    // Her bruker vi zIndex(100) for at dropdown skal havne øverst
+                    HStack(alignment: .top, spacing: 0) {
                         
-                        // --- TOP SECTION: PROCESS (LEFT) & RESULT (RIGHT) ---
-                        HStack(alignment: .top, spacing: 15) {
+                        // LEFT: Process Selector
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("PROCESS")
+                                .font(RetroTheme.font(size: 10))
+                                .foregroundColor(RetroTheme.dim)
                             
-                            // LEFT: Process Selector
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text("PROCESS")
-                                    .font(RetroTheme.font(size: 10))
-                                    .foregroundColor(RetroTheme.dim)
-                                
-                                Menu {
-                                    ForEach(processes) { process in
-                                        Button(action: { selectProcess(process) }) {
-                                            HStack {
-                                                Text(process.name)
-                                                Spacer()
-                                                Text("k=\(String(format: "%.1f", process.kFactor))")
-                                            }
-                                        }
-                                    }
-                                } label: {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(selectedProcessName)
-                                            .font(RetroTheme.font(size: 16, weight: .bold))
-                                            .lineLimit(1)
-                                            .minimumScaleFactor(0.8)
-                                        
-                                        HStack {
-                                            Text("ISO: \(currentProcess.code)")
-                                                .font(RetroTheme.font(size: 9))
-                                            Spacer()
-                                            Text("▼")
-                                                .font(RetroTheme.font(size: 10))
-                                        }
-                                        .foregroundColor(RetroTheme.dim)
-                                    }
-                                    .padding(10)
-                                    .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1.5))
-                                    .foregroundColor(RetroTheme.primary)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            // RIGHT: Result Display
-                            VStack(alignment: .trailing, spacing: 5) {
-                                Text("RECENT PASS (kJ/mm)")
-                                    .font(RetroTheme.font(size: 10))
-                                    .foregroundColor(RetroTheme.dim)
-                                
-                                Text(String(format: "%.2f", heatInput))
-                                    .font(RetroTheme.font(size: 36, weight: .black))
-                                    .foregroundColor(RetroTheme.primary)
-                                    .shadow(color: RetroTheme.primary.opacity(0.5), radius: 5)
-                                    .minimumScaleFactor(0.8)
-                                
-                               // Text("k-factor: \(String(format: "%.1f", efficiency))")
-                                 //   .font(RetroTheme.font(size: 10))
-                                   // .foregroundColor(RetroTheme.dim)
-                            }
-                            .frame(minWidth: 175, alignment: .trailing)
+                            RetroDropdown(
+                                title: "PROCESS",
+                                selection: currentProcess,
+                                options: processes,
+                                onSelect: { selectProcess($0) },
+                                itemText: { $0.name },
+                                itemDetail: { "ISO: \($0.code)  k=\(String(format: "%.1f", $0.kFactor))" }
+                            )
                         }
-                        .padding(.horizontal)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .zIndex(100) // VIKTIG: Menyen må ligge over resultatet og resten
+                        
+                        // Mellomrom
+                        Spacer(minLength: 20)
+                        
+                        // RIGHT: Result Display
+                        VStack(alignment: .trailing, spacing: 5) {
+                            Text("RECENT PASS (kJ/mm)")
+                                .font(RetroTheme.font(size: 10))
+                                .foregroundColor(RetroTheme.dim)
+                            
+                            Text(String(format: "%.2f", heatInput))
+                                .font(RetroTheme.font(size: 36, weight: .black))
+                                .foregroundColor(RetroTheme.primary)
+                                .shadow(color: RetroTheme.primary.opacity(0.5), radius: 5)
+                                .minimumScaleFactor(0.8)
+                        }
+                        .frame(minWidth: 160, alignment: .trailing)
+                        .zIndex(0)
+                    }
+                    .padding(.horizontal)
+                    .zIndex(100) // Hele topp-seksjonen må ligge over formelen under
 
-                        // --- THE VISUAL FORMULA (INTERACTIVE) ---
-                        VStack(spacing: 15) {
-                            HStack(alignment: .center, spacing: 8) {
+                    // --- THE VISUAL FORMULA (INTERACTIVE) ---
+                    VStack(spacing: 15) {
+                        HStack(alignment: .center, spacing: 8) {
+                            
+                            // Faktor k (Visuell)
+                            VStack(spacing: 0) {
+                                Text(String(format: "%.1f", efficiency))
+                                    .font(RetroTheme.font(size: 20, weight: .bold))
+                                    .foregroundColor(RetroTheme.primary)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
                                 
-                                // Faktor k (Visuell)
-                                VStack(spacing: 0) {
-                                    Text(String(format: "%.1f", efficiency))
-                                        .font(RetroTheme.font(size: 20, weight: .bold))
-                                        .foregroundColor(RetroTheme.primary)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
+                                Text("k")
+                                    .font(RetroTheme.font(size: 10))
+                                    .foregroundColor(RetroTheme.dim)
+                                    .padding(.top, 4)
+                            }
+                            
+                            // Multiplikator
+                            Text("×").font(RetroTheme.font(size: 20)).foregroundColor(RetroTheme.primary)
+                            
+                            // Brøken
+                            VStack(spacing: 4) {
+                                // Teller: Volt * Ampere * 60
+                                HStack(alignment: .bottom, spacing: 6) {
                                     
-                                    Text("k")
-                                        .font(RetroTheme.font(size: 10))
-                                        .foregroundColor(RetroTheme.dim)
-                                        .padding(.top, 4)
-                                }
-                                
-                                // Multiplikator
-                                Text("×").font(RetroTheme.font(size: 20)).foregroundColor(RetroTheme.primary)
-                                
-                                // Brøken
-                                VStack(spacing: 4) {
-                                    // Teller: Volt * Ampere * 60
-                                    HStack(alignment: .bottom, spacing: 6) {
-                                        
-                                       
-                                        
-                                        // VOLT KNAPP
-                                        RollingInputButton(
-                                            label: "U (Volt)",
-                                            value: voltageStr.toDouble,
-                                            precision: 1,
-                                            action: { activeInput = .voltage }
-                                        )
-                                        
-                                        Text("×").foregroundColor(RetroTheme.dim)
-                                        
-                                        // AMPERE KNAPP
-                                        RollingInputButton(
-                                            label: "I (Amp)",
-                                            value: amperageStr.toDouble,
-                                            precision: 0,
-                                            action: { activeInput = .amperage }
-                                        )
-                                        
-                                        Text("×").foregroundColor(RetroTheme.dim)
-                                        
-                                        // Konstant 60
-                                        VStack(spacing: 0) {
-                                            Text("60")
-                                                .font(RetroTheme.font(size: 16, weight: .bold))
-                                                .foregroundColor(RetroTheme.dim)
-                                                .padding(.vertical, 8) // Matcher høyden til knappene bedre
-                                            Text("sec")
-                                                .font(RetroTheme.font(size: 8))
-                                                .foregroundColor(RetroTheme.dim)
-                                                .padding(.top, 4)
-                                        }
-                                    }
+                                    // VOLT KNAPP
+                                    RollingInputButton(
+                                        label: "U (Volt)",
+                                        value: voltageStr.toDouble,
+                                        precision: 1,
+                                        action: { activeInput = .voltage }
+                                    )
                                     
-                                    // Brøkstrek
-                                    Rectangle()
-                                        .fill(RetroTheme.primary)
-                                        .frame(height: 2)
+                                    Text("×").foregroundColor(RetroTheme.dim)
                                     
-                                    // Nevner: Travel Speed * 1000
-                                    HStack(alignment: .top, spacing: 6) {
-                                        
-                                        // FART KNAPP
-                                        RollingInputButton(
-                                            label: "v (mm/min)",
-                                            value: travelSpeedStr.toDouble,
-                                            precision: 0,
-                                            action: { activeInput = .speed }
-                                        )
-                                        
-                                        Text("×").foregroundColor(RetroTheme.dim)
-                                        
-                                        // Konstant 1000
-                                        VStack(spacing: 0) {
-                                            Text("1000")
-                                                .font(RetroTheme.font(size: 16, weight: .bold))
-                                                .foregroundColor(RetroTheme.dim)
-                                                .padding(.vertical, 8)
-                                            Text("mm")
-                                                .font(RetroTheme.font(size: 8))
-                                                .foregroundColor(RetroTheme.dim)
-                                                .padding(.top, 4)
-                                        }
+                                    // AMPERE KNAPP
+                                    RollingInputButton(
+                                        label: "I (Amp)",
+                                        value: amperageStr.toDouble,
+                                        precision: 0,
+                                        action: { activeInput = .amperage }
+                                    )
+                                    
+                                    Text("×").foregroundColor(RetroTheme.dim)
+                                    
+                                    // Konstant 60
+                                    VStack(spacing: 0) {
+                                        Text("60")
+                                            .font(RetroTheme.font(size: 16, weight: .bold))
+                                            .foregroundColor(RetroTheme.dim)
+                                            .padding(.vertical, 8)
+                                        Text("sec")
+                                            .font(RetroTheme.font(size: 8))
+                                            .foregroundColor(RetroTheme.dim)
+                                            .padding(.top, 4)
                                     }
                                 }
                                 
-                               
+                                // Brøkstrek
+                                Rectangle()
+                                    .fill(RetroTheme.primary)
+                                    .frame(height: 2)
                                 
-                                
+                                // Nevner: Travel Speed * 1000
+                                HStack(alignment: .top, spacing: 6) {
+                                    
+                                    // FART KNAPP
+                                    RollingInputButton(
+                                        label: "v (mm/min)",
+                                        value: travelSpeedStr.toDouble,
+                                        precision: 0,
+                                        action: { activeInput = .speed }
+                                    )
+                                    
+                                    Text("×").foregroundColor(RetroTheme.dim)
+                                    
+                                    // Konstant 1000
+                                    VStack(spacing: 0) {
+                                        Text("1000")
+                                            .font(RetroTheme.font(size: 16, weight: .bold))
+                                            .foregroundColor(RetroTheme.dim)
+                                            .padding(.vertical, 8)
+                                        Text("mm")
+                                            .font(RetroTheme.font(size: 8))
+                                            .foregroundColor(RetroTheme.dim)
+                                            .padding(.top, 4)
+                                    }
+                                }
                             }
                         }
-                        .padding()
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(RetroTheme.dim, lineWidth: 1).opacity(0.5))
-                        .padding(.horizontal)
-                        
-                        // --- SAVE & LOGS ---
-                        ScrollView {
+                    }
+                    .padding()
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(RetroTheme.dim, lineWidth: 1).opacity(0.5))
+                    .padding(.horizontal)
+                    .zIndex(0) // Formelen ligger under topp-seksjonen
+                    
+                    // --- SAVE & LOGS ---
+                    ScrollView {
                         VStack(alignment: .leading, spacing: 15) {
                             HStack {
                                 TextField("ID (e.g. Root Pass)...", text: $customName)
@@ -290,6 +264,7 @@ struct HeatInputView: View {
                         .padding(.horizontal)
                         .padding(.bottom, 50)
                     }
+                    .zIndex(0)
                 }
             }
         }
@@ -340,12 +315,9 @@ struct HeatInputView: View {
     func selectProcess(_ process: WeldingProcess) {
         selectedProcessName = process.name
         efficiency = process.kFactor
-        // Setter startverdier slik at rullehjulene begynner på et fornuftig sted
         voltageStr = process.defaultVoltage
         amperageStr = process.defaultAmperage
-        // Vi setter en "dummy" verdi for fart også, eller lar den være den brukeren hadde sist
         if travelSpeedStr.isEmpty { travelSpeedStr = "300" }
-        
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
     

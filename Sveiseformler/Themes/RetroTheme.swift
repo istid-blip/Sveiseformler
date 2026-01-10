@@ -274,3 +274,95 @@ struct RollingPickerSheet: View {
         .presentationDragIndicator(.visible)
     }
 }
+// I RetroTheme.swift
+
+struct RetroDropdown<T: Identifiable & Equatable>: View {
+    let title: String
+    let selection: T
+    let options: [T]
+    let onSelect: (T) -> Void
+    let itemText: (T) -> String
+    let itemDetail: ((T) -> String)?
+    
+    @State private var isExpanded = false
+    
+    var body: some View {
+        // --- HEADER BUTTON ---
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isExpanded.toggle()
+            }
+            if isExpanded {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            }
+        }) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(itemText(selection))
+                        .font(RetroTheme.font(size: 16, weight: .bold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    
+                    if let detail = itemDetail?(selection) {
+                        HStack {
+                            Text(detail)
+                                .font(RetroTheme.font(size: 9))
+                            Spacer()
+                            Text(isExpanded ? "▲" : "▼")
+                                .font(RetroTheme.font(size: 10))
+                        }
+                        .foregroundColor(RetroTheme.dim)
+                    }
+                }
+            }
+            .padding(10)
+            .background(Color.black)
+            .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1.5))
+        }
+        .buttonStyle(PlainButtonStyle())
+        .foregroundColor(RetroTheme.primary)
+        // --- FLOATING LIST OVERLAY ---
+        .overlay(
+            GeometryReader { geo in
+                if isExpanded {
+                    VStack(spacing: 0) {
+                        ForEach(options) { option in
+                            Button(action: {
+                                onSelect(option)
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    isExpanded = false
+                                }
+                            }) {
+                                HStack {
+                                    Text(itemText(option))
+                                        .font(RetroTheme.font(size: 14))
+                                        .foregroundColor(option == selection ? Color.black : RetroTheme.primary)
+                                    
+                                    Spacer()
+                                    
+                                    if let detail = itemDetail?(option) {
+                                        Text(detail)
+                                            .font(RetroTheme.font(size: 10))
+                                            .foregroundColor(option == selection ? Color.black.opacity(0.8) : RetroTheme.dim)
+                                    }
+                                }
+                                .padding(.vertical, 12)
+                                .padding(.horizontal, 10)
+                                .background(option == selection ? RetroTheme.primary : Color.black)
+                            }
+                            .overlay(
+                                Rectangle().frame(height: 1).foregroundColor(RetroTheme.dim.opacity(0.3)),
+                                alignment: .bottom
+                            )
+                        }
+                    }
+                    .background(Color.black)
+                    .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1.5))
+                    .frame(width: geo.size.width) // Samme bredde som knappen
+                    .offset(y: geo.size.height + 5) // Flytter listen rett under knappen
+                }
+            }
+        )
+        .zIndex(100) // Sikrer at denne alltid ligger ØVERST
+    }
+}
