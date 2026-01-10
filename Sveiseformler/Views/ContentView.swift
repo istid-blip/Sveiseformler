@@ -12,7 +12,7 @@ struct ContentView: View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
                 
-                // HEADER (Logo)
+                // HEADER LOGO
                 VStack {
                     Text(verbatim: """
                      ___  _  _  ___  _  ___ 
@@ -29,7 +29,7 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 20)
                 
-                // Denne teksten kan nå oversettes automatisk hvis nøkkelen finnes i Localizable
+                // Denne teksten oversettes automatisk hvis nøkkelen finnes i Localizable
                 Text("SYSTEM STATUS: ONLINE")
                     .font(RetroTheme.font(size: 14))
                     .foregroundColor(RetroTheme.primary)
@@ -53,18 +53,17 @@ struct ContentView: View {
                             TerminalMenuItem(label: "3. DEPOSITION RATE")
                         }
                         
-                        // ORDBOK
                         NavigationLink(destination: DictionaryView()) {
                             TerminalMenuItem(label: "4. WELD DICTIONARY")
                         }
                         
                         Divider().background(RetroTheme.primary.opacity(0.5))
                         
-                        // INNSTILLINGER
+                        // --- NY KNAPP: MACHINE SETUP ---
                         NavigationLink(destination: SettingsView()) {
                             HStack {
-                                Image(systemName: "gearshape.fill")
-                                Text("SYSTEM CONFIG")
+                                Image(systemName: "wrench.and.screwdriver.fill") // Mer "mekanisk" ikon
+                                Text("MACHINE SETUP") // Nytt navn!
                             }
                             .font(RetroTheme.font(size: 16, weight: .bold))
                             .foregroundColor(RetroTheme.primary)
@@ -90,9 +89,8 @@ struct ContentView: View {
     }
 }
 
-// Hjelpevisning beholdes lik
+// Oppdatert Helper: Tar nå imot LocalizedStringKey
 struct TerminalMenuItem: View {
-    // Hvis vi bruker LocalizedStringKey her, skjer oversettelsen automatisk
     let label: LocalizedStringKey
     
     var body: some View {

@@ -1,21 +1,33 @@
 import SwiftUI
 
+// Hjelpestruktur for språkvalg i Dropdown
+struct LanguageOption: Identifiable, Equatable {
+    let id: String    // F.eks "no", "en"
+    let name: String  // F.eks "NORSK (NO)"
+}
+
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     
     // --- LAGREDE INNSTILLINGER ---
-    // Språk (no = Norsk, en = Engelsk)
     @AppStorage("app_language") private var selectedLanguage: String = "no"
-    
-    // Visuelt
     @AppStorage("enable_crt_effect") private var enableCRT: Bool = true
     @AppStorage("enable_haptics") private var enableHaptics: Bool = true
-    
-    // Standarder
     @AppStorage("default_process_code") private var defaultProcess: String = "135/136"
     
-    // Bekreftelse for sletting
     @State private var showDeleteConfirmation = false
+    
+    // Definisjon av tilgjengelige språk
+    // Her er det superenkelt å legge til flere linjer senere!
+    private let languageOptions = [
+        LanguageOption(id: "no", name: "NORSK (NO)"),
+        LanguageOption(id: "en", name: "ENGLISH (EN)")
+    ]
+    
+    // Hjelper for å finne det valgte objektet basert på lagret ID
+    var currentLanguageOption: LanguageOption {
+        languageOptions.first(where: { $0.id == selectedLanguage }) ?? languageOptions[0]
+    }
     
     var body: some View {
         ZStack {
@@ -34,7 +46,7 @@ struct SettingsView: View {
                         .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
                     }
                     Spacer()
-                    Text("SYSTEM_CONFIG")
+                    Text("MACHINE_SETUP")
                         .font(RetroTheme.font(size: 16, weight: .heavy))
                         .foregroundColor(RetroTheme.primary)
                 }
@@ -43,32 +55,43 @@ struct SettingsView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 30) {
                         
-                        // --- SECTION 1: LOCALIZATION ---
+                        // --- SECTION 1: LOCALIZATION (Nå med RetroDropdown!) ---
                         SettingsSection(title: "LOCALIZATION") {
-                            HStack {
-                                Text("LANGUAGE:")
+                            HStack(alignment: .top) {
+                                Text("SYSTEM LANGUAGE:")
                                     .font(RetroTheme.font(size: 14))
                                     .foregroundColor(RetroTheme.primary)
+                                    .padding(.top, 12) // Justerer teksten så den liner opp med knappen
+                                
                                 Spacer()
                                 
-                                // Egen "Radio Button" løsning for retro look
-                                HStack(spacing: 0) {
-                                    LanguageButton(title: "NOR", code: "no", selected: $selectedLanguage)
-                                    Rectangle().fill(RetroTheme.primary).frame(width: 1, height: 20)
-                                    LanguageButton(title: "ENG", code: "en", selected: $selectedLanguage)
+                                // HER GJENBRUKER VI RETRO DROPDOWN
+                                // Vi bruker zIndex for å sikre at menyen legger seg over ting nedenfor
+                                VStack {
+                                    RetroDropdown(
+                                        title: "LANGUAGE",
+                                        selection: currentLanguageOption,
+                                        options: languageOptions,
+                                        onSelect: { option in
+                                            selectedLanguage = option.id
+                                            // UIImpactFeedbackGenerator ligger allerede inne i RetroDropdown
+                                        },
+                                        itemText: { $0.name },
+                                        itemDetail: nil // Vi trenger ingen detalj-tekst for språk
+                                    )
                                 }
-                                .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
+                                .frame(width: 160) // Setter en fast bredde som passer menyen
+                                .zIndex(100)       // Viktig for at dropdown ikke skal havne bak neste seksjon
                             }
                         }
+                        .zIndex(100) // Viktig for at hele seksjonen skal ligge øverst
                         
-                        // --- SECTION 2: DISPLAY & HAPTICS ---
+                        // --- SECTION 2: DISPLAY & I/O ---
                         SettingsSection(title: "DISPLAY & I/O") {
-                            // CRT Toggle
                             RetroToggleRow(title: "CRT SCANLINES", isOn: $enableCRT)
-                            
-                            // Haptics Toggle
                             RetroToggleRow(title: "HAPTIC FEEDBACK", isOn: $enableHaptics)
                         }
+                        .zIndex(90)
                         
                         // --- SECTION 3: DEFAULTS ---
                         SettingsSection(title: "DEFAULTS") {
@@ -77,7 +100,6 @@ struct SettingsView: View {
                                     .font(RetroTheme.font(size: 12))
                                     .foregroundColor(RetroTheme.dim)
                                 
-                                // Enkel input for nå, kan byttes med dropdown senere
                                 TextField("135...", text: $defaultProcess)
                                     .font(RetroTheme.font(size: 14))
                                     .foregroundColor(RetroTheme.primary)
@@ -86,8 +108,9 @@ struct SettingsView: View {
                                     .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
                             }
                         }
+                        .zIndex(80)
                         
-                        // --- SECTION 4: DATA MANAGEMENT ---
+                        // --- SECTION 4: RESET ---
                         SettingsSection(title: "MEMORY BANK") {
                             Button(action: { showDeleteConfirmation = true }) {
                                 HStack {
@@ -95,14 +118,15 @@ struct SettingsView: View {
                                     Text("FACTORY RESET / WIPE DATA")
                                 }
                                 .font(RetroTheme.font(size: 12, weight: .bold))
-                                .foregroundColor(.red) // Rød tekst for fare
+                                .foregroundColor(.red)
                                 .padding()
                                 .frame(maxWidth: .infinity)
                                 .overlay(Rectangle().stroke(Color.red, lineWidth: 1))
                             }
                         }
+                        .zIndex(70)
                         
-                        // --- FOOTER INFO ---
+                        // --- FOOTER ---
                         VStack(spacing: 5) {
                             Text("Sveiseformler v1.0.2")
                             Text("System ID: \(UUID().uuidString.prefix(8))")
@@ -116,20 +140,20 @@ struct SettingsView: View {
                 }
             }
         }
-        .crtScreen() // Bruker effekten her også (med mindre vi skrur den av, se logikk under)
+        .crtScreen()
         .navigationBarHidden(true)
         .alert("CONFIRM WIPE", isPresented: $showDeleteConfirmation) {
             Button("CANCEL", role: .cancel) { }
             Button("DELETE EVERYTHING", role: .destructive) {
-                // Her kan du legge inn funksjon for å slette alt fra SwiftData
+                // Her kan vi legge inn logikk for å slette alt i SwiftData senere
             }
         } message: {
-            Text("This will permanently delete all saved weld logs and jobs. This action cannot be undone.")
+            Text("This will permanently delete all saved weld logs and jobs.")
         }
     }
 }
 
-// --- HJELPEKOMPONENTER FOR SETTINGS ---
+// --- HJELPERE (Beholdes som før) ---
 
 struct SettingsSection<Content: View>: View {
     let title: String
@@ -145,14 +169,13 @@ struct SettingsSection<Content: View>: View {
             Text("> \(title)")
                 .font(RetroTheme.font(size: 12, weight: .bold))
                 .foregroundColor(RetroTheme.dim)
-            
             content
         }
     }
 }
 
 struct RetroToggleRow: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var isOn: Bool
     
     var body: some View {
@@ -170,7 +193,6 @@ struct RetroToggleRow: View {
                     Text(isOn ? "[ ON ]" : "  OFF  ")
                         .font(RetroTheme.font(size: 14, weight: .bold))
                     
-                    // En liten "LED" indikator
                     Circle()
                         .fill(isOn ? RetroTheme.primary : Color.clear)
                         .stroke(RetroTheme.primary, lineWidth: 1)
@@ -182,23 +204,6 @@ struct RetroToggleRow: View {
                 .foregroundColor(isOn ? RetroTheme.primary : RetroTheme.dim)
                 .overlay(Rectangle().stroke(RetroTheme.dim.opacity(0.5), lineWidth: 1))
             }
-        }
-    }
-}
-
-struct LanguageButton: View {
-    let title: String
-    let code: String
-    @Binding var selected: String
-    
-    var body: some View {
-        Button(action: { selected = code }) {
-            Text(title)
-                .font(RetroTheme.font(size: 12, weight: selected == code ? .bold : .regular))
-                .foregroundColor(selected == code ? Color.black : RetroTheme.primary)
-                .padding(.vertical, 6)
-                .padding(.horizontal, 12)
-                .background(selected == code ? RetroTheme.primary : Color.black)
         }
     }
 }
