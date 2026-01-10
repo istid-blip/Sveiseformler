@@ -98,39 +98,70 @@ extension View {
 
 // MARK: - Specialized Retro Components
 
-// 1. The Standard History Row (Used in all Calculators)
+// Erstatt den gamle RetroHistoryRow i RetroTheme.swift med denne:
+
 struct RetroHistoryRow: View {
     let item: SavedCalculation
     let onDelete: () -> Void
     
     var body: some View {
         HStack {
-            VStack(alignment: .leading) {
-                Text(item.name)
-                    .font(RetroTheme.font(size: 14, weight: .bold))
-                Text(item.timestamp.formatted(date: .numeric, time: .shortened))
-                    .font(RetroTheme.font(size: 10))
-                    .opacity(0.7)
+            VStack(alignment: .leading, spacing: 4) {
+                // Navn og Dato
+                HStack {
+                    Text(item.name)
+                        .font(RetroTheme.font(size: 16, weight: .bold))
+                        .foregroundColor(RetroTheme.primary)
+                    
+                    Spacer()
+                    
+                    Text(item.timestamp, format: .dateTime.day().month().hour().minute())
+                        .font(RetroTheme.font(size: 10))
+                        .foregroundColor(RetroTheme.dim)
+                }
+                
+                // VISER DETALJENE HVIS DE FINNES (NY KODE)
+                if let v = item.voltage, let i = item.amperage, let t = item.travelTime, let l = item.weldLength {
+                    HStack(spacing: 10) {
+                        detailText(label: "U:", value: "\(v)V")
+                        detailText(label: "I:", value: "\(Int(i))A")
+                        detailText(label: "t:", value: "\(Int(t))s")
+                        detailText(label: "L:", value: "\(Int(l))mm")
+                    }
+                }
             }
             
             Spacer()
             
-            Text(item.resultValue)
-                .font(RetroTheme.font(size: 14, weight: .bold))
-            
-            // Delete Button
-            Button(action: onDelete) {
-                Text("[DEL]")
-                    .font(RetroTheme.font(size: 12))
-                    .foregroundColor(.red) // Red for danger
-                    .padding(.leading, 10)
+            // Resultat
+            VStack(alignment: .trailing) {
+                Text(item.resultValue)
+                    .font(RetroTheme.font(size: 18, weight: .heavy))
+                    .foregroundColor(RetroTheme.primary)
+                
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 12))
+                        .foregroundColor(RetroTheme.dim)
+                }
+                .padding(.top, 2)
             }
         }
-        .padding()
-        .foregroundColor(RetroTheme.primary)
-        .overlay(
-            Rectangle().stroke(RetroTheme.dim, lineWidth: 1)
-        )
+        .padding(12)
+        .overlay(Rectangle().stroke(RetroTheme.dim.opacity(0.5), lineWidth: 1))
+        .background(Color.black.opacity(0.3))
+    }
+    
+    // Hjelpefunksjon for små detaljer
+    func detailText(label: String, value: String) -> some View {
+        HStack(spacing: 2) {
+            Text(label)
+                .font(RetroTheme.font(size: 10))
+                .foregroundColor(RetroTheme.dim)
+            Text(value)
+                .font(RetroTheme.font(size: 10))
+                .foregroundColor(RetroTheme.primary)
+        }
     }
 }
 

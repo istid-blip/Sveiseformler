@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ContentView: View {
     
-    // Setter opp retro-stil på navigasjonsbaren
     init() {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.green, .font: UIFont.monospacedSystemFont(ofSize: 30, weight: .bold)]
         UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor.green, .font: UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)]
@@ -13,24 +12,24 @@ struct ContentView: View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
                 
+                // HEADER (Logo)
                 VStack {
-                    // VIKTIG: "verbatim:" forteller SwiftUI at den skal ignorere Markdown-koder som _ og *
                     Text(verbatim: """
                      ___  _  _  ___  _  ___ 
                     / __|| || || __|| |/ __|
                     \\__ \\| \\/ || _| | |\\__ \\
                     |___/ \\__/ |___||_||___/
                     """)
-                    // Vi bruker "Menlo-Bold" fordi den er 100% monospaced på alle iOS-enheter
                     .font(.custom("Menlo-Bold", size: 12))
                     .lineSpacing(2)
                     .foregroundColor(RetroTheme.primary)
-                    .multilineTextAlignment(.leading) // Sørger for at tegnene treffer hverandre vertikalt
-                    .fixedSize(horizontal: false, vertical: true) // Hindrer at teksten blir kuttet
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
-                .frame(maxWidth: .infinity) // Sentrerer selve blokken på skjermen
+                .frame(maxWidth: .infinity)
                 .padding(.bottom, 20)
                 
+                // Denne teksten kan nå oversettes automatisk hvis nøkkelen finnes i Localizable
                 Text("SYSTEM STATUS: ONLINE")
                     .font(RetroTheme.font(size: 14))
                     .foregroundColor(RetroTheme.primary)
@@ -38,18 +37,41 @@ struct ContentView: View {
                 
                 Divider().background(RetroTheme.primary)
 
-                // Menyvalg - Kun de 3 kalkulatorene
-                Group {
-                    NavigationLink(destination: HeatInputView()) {
-                        TerminalMenuItem(label: "1. HEAT INPUT CALC")
-                    }
-                    
-                    NavigationLink(destination: CarbonEquivalentView()) {
-                        TerminalMenuItem(label: "2. CARBON EQUIV.")
-                    }
-                    
-                    NavigationLink(destination: DepositionRateView()) {
-                        TerminalMenuItem(label: "3. DEPOSITION RATE")
+                // MENY
+                ScrollView {
+                    VStack(spacing: 15) {
+                        
+                        NavigationLink(destination: HeatInputView()) {
+                            TerminalMenuItem(label: "1. HEAT INPUT CALC")
+                        }
+                        
+                        NavigationLink(destination: CarbonEquivalentView()) {
+                            TerminalMenuItem(label: "2. CARBON EQUIV.")
+                        }
+                        
+                        NavigationLink(destination: DepositionRateView()) {
+                            TerminalMenuItem(label: "3. DEPOSITION RATE")
+                        }
+                        
+                        // ORDBOK
+                        NavigationLink(destination: DictionaryView()) {
+                            TerminalMenuItem(label: "4. WELD DICTIONARY")
+                        }
+                        
+                        Divider().background(RetroTheme.primary.opacity(0.5))
+                        
+                        // INNSTILLINGER
+                        NavigationLink(destination: SettingsView()) {
+                            HStack {
+                                Image(systemName: "gearshape.fill")
+                                Text("SYSTEM CONFIG")
+                            }
+                            .font(RetroTheme.font(size: 16, weight: .bold))
+                            .foregroundColor(RetroTheme.primary)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
+                        }
                     }
                 }
                 
@@ -61,16 +83,18 @@ struct ContentView: View {
                     .opacity(0.8)
             }
             .padding()
-            .crtScreen() // Legger på den grønne bakgrunnen og scanlines
+            .crtScreen()
         }
-        .accentColor(RetroTheme.primary) // Gjør at tilbake-piler blir grønne
+        .accentColor(RetroTheme.primary)
         .preferredColorScheme(.dark)
     }
 }
 
-// Hjelpevisning for menyknappene
+// Hjelpevisning beholdes lik
 struct TerminalMenuItem: View {
-    let label: String
+    // Hvis vi bruker LocalizedStringKey her, skjer oversettelsen automatisk
+    let label: LocalizedStringKey
+    
     var body: some View {
         HStack {
             Text(label)
