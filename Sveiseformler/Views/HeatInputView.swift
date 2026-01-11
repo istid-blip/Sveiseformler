@@ -139,7 +139,7 @@ struct HeatInputView: View {
                             HStack(alignment: .top, spacing: 0) {
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text("PROCESS").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
-                                    RetroDropdown(title: "PROCESS", selection: currentProcess, options: processes, onSelect: { selectProcess($0) }, itemText: { $0.name }, itemDetail: { "ISO: \($0.code) k=\($0.kFactor)" })
+                                    RetroDropdown(title: "PROCESS", selection: currentProcess, options: processes, onSelect: { selectProcess($0) }, itemText: { $0.name }, itemDetail: { "ISO 4063: \($0.code)" })
                                     if calculatedSpeed > 0 {
                                         Text("Speed: \(String(format: "%.0f", calculatedSpeed)) mm/min").font(RetroTheme.font(size: 9)).foregroundColor(RetroTheme.dim).padding(.top, 4)
                                     }
@@ -161,24 +161,25 @@ struct HeatInputView: View {
                             VStack(spacing: 15) {
                                 HStack(alignment: .center, spacing: 8) {
                                     VStack(spacing: 0) {
+                                        Text("ISO 17671").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim).padding(4)
                                         Text(String(format: "%.1f", efficiency)).font(RetroTheme.font(size: 20, weight: .bold)).foregroundColor(RetroTheme.primary).padding(.horizontal, 12).padding(.vertical, 8).overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
-                                        Text("k").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim).padding(.top, 4)
+                                        Text("k-factor").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim).padding(4)
                                     }
                                     Text("×").font(RetroTheme.font(size: 20)).foregroundColor(RetroTheme.primary)
                                     
                                     VStack(spacing: 4) {
                                         HStack(alignment: .bottom, spacing: 6) {
-                                            SelectableInput(label: "U (V)", value: voltageStr.toDouble, target: .voltage, currentFocus: focusedField, precision: 1) { focusedField = .voltage }
+                                            SelectableInput(label: "Voltage (V)", value: voltageStr.toDouble, target: .voltage, currentFocus: focusedField, precision: 1) { focusedField = .voltage }
                                             Text("×").foregroundColor(RetroTheme.dim)
-                                            SelectableInput(label: "I (A)", value: amperageStr.toDouble, target: .amperage, currentFocus: focusedField, precision: 0) { focusedField = .amperage }
+                                            SelectableInput(label: "Current (A)", value: amperageStr.toDouble, target: .amperage, currentFocus: focusedField, precision: 0) { focusedField = .amperage }
                                         }
                                         Rectangle().fill(RetroTheme.primary).frame(height: 2)
                                         HStack(alignment: .top, spacing: 4) {
-                                            Text("(").font(RetroTheme.font(size: 18)).foregroundColor(RetroTheme.dim).padding(.top, 10)
-                                            SelectableInput(label: "L (mm)", value: lengthStr.toDouble, target: .length, currentFocus: focusedField, precision: 0) { focusedField = .length }
+                                            
+                                            SelectableInput(label: "Length (mm)", value: lengthStr.toDouble, target: .length, currentFocus: focusedField, precision: 0) { focusedField = .length }
                                             Text("/").font(RetroTheme.font(size: 16)).foregroundColor(RetroTheme.dim).padding(.top, 10)
-                                            SelectableInput(label: "t (s)", value: timeStr.toDouble, target: .time, currentFocus: focusedField, precision: 0) { focusedField = .time }
-                                            Text(")").font(RetroTheme.font(size: 18)).foregroundColor(RetroTheme.dim).padding(.top, 10)
+                                            SelectableInput(label: "time (s)", value: timeStr.toDouble, target: .time, currentFocus: focusedField, precision: 0) { focusedField = .time }
+                                            
                                             Text("×").foregroundColor(RetroTheme.dim).padding(.top, 10)
                                             HStack(alignment: .top, spacing: 0) { Text("10").font(RetroTheme.font(size: 16, weight: .bold)); Text("3").font(RetroTheme.font(size: 10, weight: .bold)).baselineOffset(8) }.foregroundColor(RetroTheme.dim).padding(.top, 8)
                                         }
@@ -292,17 +293,18 @@ struct HeatInputView: View {
         }) {
             VStack(spacing: 0) {
                 Text(String(format: "%.\(precision)f", value))
-                    .font(RetroTheme.font(size: 18, weight: .bold))
+                    .font(RetroTheme.font(size: 24, weight: .bold))
                     .foregroundColor(textColor)
-                    .padding(.vertical, 8)
-                    .frame(minWidth: 60)
+                    .padding(.vertical, 4)
+                    .frame(minWidth: 80)
                     .background(Color.black)
                     .overlay(Rectangle().stroke(borderColor, lineWidth: isSelected ? 2 : 1))
                 
                 Text(label)
                     .font(RetroTheme.font(size: 10))
                     .foregroundColor(RetroTheme.dim)
-                    .padding(.top, 4)
+                    .padding(4)
+                    .fixedSize(horizontal: true, vertical: false) // Brukte denne for å få all tekst inn på en linje under SelectableInput
             }
         }
         .buttonStyle(PlainButtonStyle())
