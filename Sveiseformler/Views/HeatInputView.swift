@@ -272,6 +272,7 @@ struct HeatInputView: View {
         .onAppear {
             restoreActiveJob()
         }
+        .crtScreen()
     }
     
     // --- COMPONENTS & LOGIC ---
@@ -374,38 +375,46 @@ struct HeatInputView: View {
     }
     
     func logPass() {
-        let job: WeldGroup
-        
-        if let id = activeJobID, let existingJob = jobHistory.first(where: { $0.id == id }) {
-            job = existingJob
-            // Oppdater navnet hvis brukeren har endret det i tekstfeltet
-            if !currentJobName.isEmpty && currentJobName != job.name {
-                job.name = currentJobName
+            let job: WeldGroup
+            
+            // 1. Finn eller opprett jobb
+            if let id = activeJobID, let existingJob = jobHistory.first(where: { $0.id == id }) {
+                job = existingJob
+                // Oppdater navn hvis endret
+                if !currentJobName.isEmpty && currentJobName != job.name {
+                    job.name = currentJobName
+                }
+            } else {
+                let name = currentJobName.isEmpty ? "Job \(Date().formatted(.dateTime.day().month().hour().minute()))" : currentJobName
+                job = WeldGroup(name: name)
+                modelContext.insert(job)
+                activeJobID = job.id
+                currentJobName = name
             }
-        } else {
-            let name = currentJobName.isEmpty ? "Job \(Date().formatted(.dateTime.day().month().hour().minute()))" : currentJobName
-            job = WeldGroup(name: name)
-            modelContext.insert(job)
-            activeJobID = job.id
-            currentJobName = name
+            
+            // 2. Lagre passet
+            let newPass = SavedCalculation(
+                name: "Pass #\(passCounter)",
+                resultValue: String(format: "%.2f kJ/mm", heatInput),
+                category: "HeatInput",
+                voltage: voltageStr.toDouble,
+                amperage: amperageStr.toDouble,
+                travelTime: timeStr.toDouble,
+                weldLength: lengthStr.toDouble,
+                calculatedHeat: heatInput
+            )
+            
+            newPass.group = job
+            passCounter += 1
+            
+            // 3. VIKTIG: Oppdater datoen på jobben!
+            // Dette trigger oppdatering av UI-listen slik at "passes recorded" øker med en gang,
+            // og holder jobben øverst i listen.
+            job.date = Date()
+            
+            try? modelContext.save()
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         }
-        
-        let newPass = SavedCalculation(
-            name: "Pass #\(passCounter)",
-            resultValue: String(format: "%.2f kJ/mm", heatInput),
-            category: "HeatInput",
-            voltage: voltageStr.toDouble,
-            amperage: amperageStr.toDouble,
-            travelTime: timeStr.toDouble,
-            weldLength: lengthStr.toDouble,
-            calculatedHeat: heatInput
-        )
-        
-        newPass.group = job
-        passCounter += 1
-        try? modelContext.save()
-        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-    }
 }
 
 // --- JOB ROW ---
