@@ -325,7 +325,6 @@ struct RetroDropdown<T: Identifiable & Equatable>: View {
     @State private var isExpanded = false
     
     var body: some View {
-        // --- HEADER BUTTON ---
         Button(action: {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isExpanded.toggle()
@@ -359,7 +358,7 @@ struct RetroDropdown<T: Identifiable & Equatable>: View {
         }
         .buttonStyle(PlainButtonStyle())
         .foregroundColor(RetroTheme.primary)
-        // --- FLOATING LIST OVERLAY ---
+        // Her er selve listen som flyter over
         .overlay(
             GeometryReader { geo in
                 if isExpanded {
@@ -396,11 +395,137 @@ struct RetroDropdown<T: Identifiable & Equatable>: View {
                     }
                     .background(Color.black)
                     .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1.5))
-                    .frame(width: geo.size.width) // Samme bredde som knappen
+                    .frame(width: geo.size.width)
                     .offset(y: geo.size.height + 5) // Flytter listen rett under knappen
+                    .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 10)
                 }
             }
         )
-        .zIndex(100) // Sikrer at denne alltid ligger ØVERST
+        // VIKTIG: Dette sier at hvis listen er åpen, skal denne knappen tegnes OVER alt annet
+        .zIndex(isExpanded ? 100 : 1)
+    }
+}
+
+// En blinkende effekt for "Recording"-indikatorer etc.
+struct BlinkModifier: ViewModifier {
+    @State private var isOn = false
+    
+    func body(content: Content) -> some View {
+        content
+            .opacity(isOn ? 1.0 : 0.3) // Blinker mellom full og lav synlighet
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                    isOn = true
+                }
+            }
+    }
+}
+
+extension View {
+    func blinkEffect() -> some View {
+        self.modifier(BlinkModifier())
+    }
+}
+
+// MARK: - VERTICAL RETRO JOG WHEEL
+
+// MARK: - VERTICAL RETRO JOG WHEEL (Industrial Design)
+
+struct RetroJogWheel: View {
+    @Binding var value: Double
+    var range: ClosedRange<Double>
+    var step: Double
+    var title: String // Brukes ikke visuelt inni hjulet, men med i API
+    
+    // Konfigurasjon
+    private let friction: Double = 12.0
+    private let barHeight: CGFloat = 4.0
+    private let barSpacing: CGFloat = 20.0
+    
+    @State private var dragOffset: CGFloat = 0
+    @State private var lastDragValue: CGFloat = 0
+    
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                // 1. BAKGRUNN (Mørk Gummi/Metall-look)
+                LinearGradient(
+                    colors: [
+                        Color.black,
+                        Color(white: 0.15),
+                        Color(white: 0.2), // Lysere midtparti (highlight)
+                        Color(white: 0.15),
+                        Color.black
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .overlay(
+                    // Legg på litt støy/tekstur hvis mulig, eller bare en svak ramme
+                    Rectangle().stroke(Color(white: 0.3), lineWidth: 1)
+                )
+                
+                // 2. RILLER (De bevegelige delene)
+                VStack(spacing: barSpacing) {
+                    let count = Int(geo.size.height / (barHeight + barSpacing)) + 5
+                    ForEach(0..<count, id: \.self) { _ in
+                        // Hver rille ser ut som et innhugg
+                        Capsule()
+                            .fill(LinearGradient(
+                                colors: [.black, Color(white: 0.4), .black],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ))
+                            .frame(height: barHeight)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 10) // Litt innrykk på rillene
+                            .opacity(0.8)
+                    }
+                }
+                .offset(y: (dragOffset.truncatingRemainder(dividingBy: barHeight + barSpacing)) - (barHeight + barSpacing))
+                .mask(Rectangle())
+                .allowsHitTesting(false)
+                
+                // 3. SKYGGER (Vignette for dybde oppe og nede)
+                VStack {
+                    LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: 60)
+                    Spacer()
+                    LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom).frame(height: 60)
+                }
+                .allowsHitTesting(false)
+                
+                // 4. TOUCH AREA (Usynlig, men fanger bevegelser)
+                Color.clear
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { gesture in
+                                let delta = gesture.translation.height - lastDragValue
+                                dragOffset += delta
+                                
+                                // Rask bevegelse = større hopp
+                                let multiplier: Double = abs(delta) > 15 ? 5.0 : 1.0
+                                let effectiveStep = step * multiplier
+                                
+                                if abs(dragOffset) > friction {
+                                    // Dra NED = Reduser verdi. Dra OPP = Øk verdi.
+                                    let direction: Double = delta > 0 ? -1 : 1
+                                    let newValue = value + (direction * effectiveStep)
+                                    
+                                    if range.contains(newValue) {
+                                        value = (newValue * 100).rounded() / 100
+                                        Haptics.selection()
+                                    }
+                                }
+                                lastDragValue = gesture.translation.height
+                            }
+                            .onEnded { _ in
+                                lastDragValue = 0
+                            }
+                    )
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.8), radius: 10, x: 0, y: -5)
+        }
     }
 }
