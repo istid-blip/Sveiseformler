@@ -40,7 +40,7 @@ struct CRTOverlay: ViewModifier {
             
             content
             
-            // The Scanlines (Optimized with Canvas)
+            // The Scanlines (Optimized with Canvas and drawingGroup)
             Scanlines()
                 .ignoresSafeArea()
                 .allowsHitTesting(false) // Let touches pass through
@@ -55,15 +55,18 @@ struct Scanlines: View {
             // Tegn en linje hver 4. piksel (2px linje, 2px mellomrom)
             for y in stride(from: 0, to: size.height, by: 4) {
                 let rect = CGRect(x: 0, y: y, width: size.width, height: 2)
-                context.fill(Path(rect), with: .color(.black.opacity(0.1)))
+                context.fill(Path(rect), with: .color(.black.opacity(0.15))) // Litt tydeligere scanlines (0.1 -> 0.15)
             }
         }
+        // VIKTIG OPTIMALISERING: Cacher tegningen som et bilde på GPU.
+        // Dette hindrer at CPU kjører på 100% når ting blinker på skjermen.
+        .drawingGroup()
     }
 }
 
 // MARK: - Button Styles
 
-struct RetroButton: ButtonStyle { // Blir denne structen brukt noen plass?
+struct RetroButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(RetroTheme.font(size: 18, weight: .bold))
@@ -80,13 +83,11 @@ struct RetroButton: ButtonStyle { // Blir denne structen brukt noen plass?
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .onChange(of: configuration.isPressed) { _, isPressed in
                 if isPressed {
-                    Haptics.play(.light) // NYTT: Bruker Haptics service
+                    Haptics.play(.light)
                 }
             }
     }
 }
-
-
 
 // MARK: - Extensions
 
@@ -98,11 +99,13 @@ extension View {
     func crtScreen() -> some View {
         self.modifier(CRTOverlay())
     }
+    
+    func blinkEffect() -> some View {
+        self.modifier(BlinkModifier())
+    }
 }
 
 // MARK: - Specialized Retro Components
-
-// Erstatt den gamle RetroHistoryRow i RetroTheme.swift med denne:
 
 struct RetroHistoryRow: View {
     let item: SavedCalculation
@@ -124,7 +127,7 @@ struct RetroHistoryRow: View {
                         .foregroundColor(RetroTheme.dim)
                 }
                 
-                // VISER DETALJENE HVIS DE FINNES (NY KODE)
+                // VISER DETALJENE HVIS DE FINNES
                 if let v = item.voltage, let i = item.amperage, let t = item.travelTime, let l = item.weldLength {
                     HStack(spacing: 10) {
                         detailText(label: "U:", value: "\(v)V")
@@ -182,25 +185,18 @@ struct RetroEquationBox: View {
             TextField("", text: $value)
                 .focused($isFocused)
                 .font(RetroTheme.font(size: 16, weight: .bold))
-                // Forenklet fargebruk: Alltid primærfarge
                 .foregroundColor(RetroTheme.primary)
                 .tint(RetroTheme.primary)
                 .multilineTextAlignment(.center)
                 .keyboardType(.decimalPad)
                 .frame(minWidth: 45)
                 .padding(.vertical, 5)
-                // Solid svart bakgrunn er raskere å tegne
                 .background(Color.black)
-                
-                // --- OPTIMALISERT RAMME (Ingen skygge) ---
                 .overlay(
                     Rectangle()
-                        // Kun enkel fargeendring, ingen glød/skygge
                         .stroke(isFocused ? RetroTheme.primary : RetroTheme.dim,
                                 lineWidth: 1)
                 )
-                
-                // --- BEHOLD LOGIKKEN (Den er bra!) ---
                 .onChange(of: isFocused) { _, focused in
                     if focused { pendingClear = true }
                 }
@@ -209,11 +205,9 @@ struct RetroEquationBox: View {
                         if newValue != oldValue {
                             pendingClear = false
                             if newValue.count > oldValue.count {
-                                // Bruker skrev noe nytt -> erstatt alt
                                 let newContent = String(newValue.dropFirst(oldValue.count))
                                 value = newContent
                             } else {
-                                // Bruker trykket backspace -> slett alt
                                 value = ""
                             }
                         }
@@ -228,9 +222,8 @@ struct RetroEquationBox: View {
     }
 }
 
-// 3. Retro Rolling Picker Components
+// 3. Retro Rolling Picker Components (Beholdt for kompatibilitet hvis brukt andre steder)
 
-// 3a. Selve knappen man trykker på for å åpne hjulet
 struct RollingInputButton: View {
     let label: String
     let value: Double
@@ -240,7 +233,7 @@ struct RollingInputButton: View {
     var body: some View {
         Button(action: {
             action()
-            Haptics.play(.light) // NYTT
+            Haptics.play(.light)
         }) {
             VStack(spacing: 0) {
                 Text(String(format: "%.\(precision)f", value))
@@ -249,7 +242,6 @@ struct RollingInputButton: View {
                     .padding(.vertical, 8)
                     .frame(minWidth: 60)
                     .background(Color.black)
-                    // Enkel ramme (raskere enn glød/skygge)
                     .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
                 
                 Text(label)
@@ -261,7 +253,6 @@ struct RollingInputButton: View {
     }
 }
 
-// 3b. Popup-arket med hjulet (Picker)
 struct RollingPickerSheet: View {
     let title: String
     @Binding var value: Double
@@ -271,11 +262,9 @@ struct RollingPickerSheet: View {
     
     var body: some View {
         ZStack {
-            // Bakgrunn
             Color.black.ignoresSafeArea()
             
             VStack {
-                // Header med tittel og Done-knapp
                 HStack {
                     Text(title)
                         .font(RetroTheme.font(size: 16, weight: .bold))
@@ -293,7 +282,6 @@ struct RollingPickerSheet: View {
                 
                 Spacer()
                 
-                // Selve hjulet
                 Picker("Value", selection: $value) {
                     ForEach(Array(stride(from: range.lowerBound, through: range.upperBound, by: step)), id: \.self) { num in
                         Text(String(format: step < 1 ? "%.1f" : "%.0f", num))
@@ -303,12 +291,12 @@ struct RollingPickerSheet: View {
                     }
                 }
                 .pickerStyle(.wheel)
-                .colorScheme(.dark) // Tvinger mørk modus på hjulet
+                .colorScheme(.dark)
                 
                 Spacer()
             }
         }
-        .presentationDetents([.height(350)]) // Dekker bare nedre del av skjermen
+        .presentationDetents([.height(350)])
         .presentationDragIndicator(.visible)
     }
 }
@@ -358,7 +346,6 @@ struct RetroDropdown<T: Identifiable & Equatable>: View {
         }
         .buttonStyle(PlainButtonStyle())
         .foregroundColor(RetroTheme.primary)
-        // Her er selve listen som flyter over
         .overlay(
             GeometryReader { geo in
                 if isExpanded {
@@ -396,38 +383,54 @@ struct RetroDropdown<T: Identifiable & Equatable>: View {
                     .background(Color.black)
                     .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1.5))
                     .frame(width: geo.size.width)
-                    .offset(y: geo.size.height + 5) // Flytter listen rett under knappen
+                    .offset(y: geo.size.height + 5)
                     .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 10)
                 }
             }
         )
-        // VIKTIG: Dette sier at hvis listen er åpen, skal denne knappen tegnes OVER alt annet
         .zIndex(isExpanded ? 100 : 1)
     }
 }
 
-// En blinkende effekt for "Recording"-indikatorer etc.
+// FIX: BlinkModifier som pauser i bakgrunnen
 struct BlinkModifier: ViewModifier {
-    @State private var isOn = false
-    
+    @State private var isBlinking = false
+    // Vi lytter til om appen er aktiv eller i bakgrunnen
+    @Environment(\.scenePhase) private var scenePhase
+
     func body(content: Content) -> some View {
         content
-            .opacity(isOn ? 1.0 : 0.3) // Blinker mellom full og lav synlighet
+            .opacity(isBlinking ? 1 : 0.3)
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                if newPhase == .active {
+                    startAnimation()
+                } else {
+                    // Stopp animasjonen for å spare strøm/CPU når appen er lukket
+                    stopAnimation()
+                }
+            }
             .onAppear {
-                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-                    isOn = true
+                if scenePhase == .active {
+                    startAnimation()
                 }
             }
     }
-}
-
-extension View {
-    func blinkEffect() -> some View {
-        self.modifier(BlinkModifier())
+    
+    private func startAnimation() {
+        withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+            isBlinking = true
+        }
+    }
+    
+    private func stopAnimation() {
+        // Reset state uten animasjon
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            isBlinking = true // Sett til synlig når den ikke blinker
+        }
     }
 }
-
-// MARK: - VERTICAL RETRO JOG WHEEL
 
 // MARK: - VERTICAL RETRO JOG WHEEL (Industrial Design)
 
@@ -435,7 +438,7 @@ struct RetroJogWheel: View {
     @Binding var value: Double
     var range: ClosedRange<Double>
     var step: Double
-    var title: String // Brukes ikke visuelt inni hjulet, men med i API
+    var title: String
     
     // Konfigurasjon
     private let friction: Double = 12.0
@@ -453,7 +456,7 @@ struct RetroJogWheel: View {
                     colors: [
                         Color.black,
                         Color(white: 0.15),
-                        Color(white: 0.2), // Lysere midtparti (highlight)
+                        Color(white: 0.2), // Lysere midtparti
                         Color(white: 0.15),
                         Color.black
                     ],
@@ -461,7 +464,6 @@ struct RetroJogWheel: View {
                     endPoint: .bottom
                 )
                 .overlay(
-                    // Legg på litt støy/tekstur hvis mulig, eller bare en svak ramme
                     Rectangle().stroke(Color(white: 0.3), lineWidth: 1)
                 )
                 
@@ -469,7 +471,6 @@ struct RetroJogWheel: View {
                 VStack(spacing: barSpacing) {
                     let count = Int(geo.size.height / (barHeight + barSpacing)) + 5
                     ForEach(0..<count, id: \.self) { _ in
-                        // Hver rille ser ut som et innhugg
                         Capsule()
                             .fill(LinearGradient(
                                 colors: [.black, Color(white: 0.4), .black],
@@ -478,15 +479,16 @@ struct RetroJogWheel: View {
                             ))
                             .frame(height: barHeight)
                             .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 10) // Litt innrykk på rillene
+                            .padding(.horizontal, 10)
                             .opacity(0.8)
                     }
                 }
                 .offset(y: (dragOffset.truncatingRemainder(dividingBy: barHeight + barSpacing)) - (barHeight + barSpacing))
                 .mask(Rectangle())
                 .allowsHitTesting(false)
+                .drawingGroup() // VIKTIG: Hindrer høy CPU-bruk ved rulling/animasjon
                 
-                // 3. SKYGGER (Vignette for dybde oppe og nede)
+                // 3. SKYGGER (Vignette)
                 VStack {
                     LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: 60)
                     Spacer()
@@ -494,7 +496,7 @@ struct RetroJogWheel: View {
                 }
                 .allowsHitTesting(false)
                 
-                // 4. TOUCH AREA (Usynlig, men fanger bevegelser)
+                // 4. TOUCH AREA
                 Color.clear
                     .contentShape(Rectangle())
                     .gesture(
@@ -503,12 +505,10 @@ struct RetroJogWheel: View {
                                 let delta = gesture.translation.height - lastDragValue
                                 dragOffset += delta
                                 
-                                // Rask bevegelse = større hopp
                                 let multiplier: Double = abs(delta) > 15 ? 5.0 : 1.0
                                 let effectiveStep = step * multiplier
                                 
                                 if abs(dragOffset) > friction {
-                                    // Dra NED = Reduser verdi. Dra OPP = Øk verdi.
                                     let direction: Double = delta > 0 ? -1 : 1
                                     let newValue = value + (direction * effectiveStep)
                                     
