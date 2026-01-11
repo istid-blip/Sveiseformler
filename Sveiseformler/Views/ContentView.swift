@@ -49,12 +49,16 @@ struct ContentView: View {
                             TerminalMenuItem(label: "2. CARBON EQUIV.")
                         }
                         
+                        NavigationLink(destination: SchaefflerView()) {
+                            TerminalMenuItem(label: "3. SCHAEFFLER CALC")
+                        }
+                        
                         NavigationLink(destination: DepositionRateView()) {
-                            TerminalMenuItem(label: "3. DEPOSITION RATE")
+                            TerminalMenuItem(label: "4. DEPOSITION RATE")
                         }
                         
                         NavigationLink(destination: DictionaryView()) {
-                            TerminalMenuItem(label: "4. WELD DICTIONARY")
+                            TerminalMenuItem(label: "5. WELD DICTIONARY")
                         }
                         
                         Divider().background(RetroTheme.primary.opacity(0.5))

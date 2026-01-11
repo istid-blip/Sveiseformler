@@ -181,7 +181,7 @@ struct HeatInputView: View {
                                             SelectableInput(label: "time (s)", value: timeStr.toDouble, target: .time, currentFocus: focusedField, precision: 0) { focusedField = .time }
                                             
                                             Text("×").foregroundColor(RetroTheme.dim).padding(.top, 10)
-                                            HStack(alignment: .top, spacing: 0) { Text("10").font(RetroTheme.font(size: 16, weight: .bold)); Text("3").font(RetroTheme.font(size: 10, weight: .bold)).baselineOffset(8) }.foregroundColor(RetroTheme.dim).padding(.top, 8)
+                                            HStack(alignment: .top, spacing: 0) { Text("10").font(RetroTheme.font(size: 16, weight: .bold)); Text("3").font(RetroTheme.font(size: 10, weight: .bold)).baselineOffset(8) }.fixedSize(horizontal: true, vertical: false).foregroundColor(RetroTheme.dim).padding(.top, 8) //brukte fixedsize for å få alt inn på en linje
                                         }
                                     }
                                 }
@@ -204,7 +204,7 @@ struct HeatInputView: View {
                                         }
                                         Button(action: logPass) {
                                             HStack {
-                                                Text("LOG PASS #\(passCounter)").font(RetroTheme.font(size: 16, weight: .heavy))
+                                                Text("LOG PASS #\(passCounter)").font(RetroTheme.font(size: 20, weight: .heavy))
                                                 Spacer()
                                                 Image(systemName: "arrow.right.to.line")
                                             }
