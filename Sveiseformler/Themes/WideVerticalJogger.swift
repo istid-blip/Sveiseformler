@@ -58,7 +58,7 @@ struct WideJoggerComponent: View {
     // --- KONFIGURASJON ---
     private let spacing: CGFloat = 20 // Avstand mellom strekene
     private let visibleTicks: Int = 5 // Hvor mange streker opp/ned som tegnes
-    private let sensitivity: CGFloat = 10.0 // Hvor mange piksler drag for ett steg (Lavere = raskere)
+    private let sensitivity: CGFloat = 25.0 // Hvor mange piksler drag for ett steg (Lavere = raskere)
     
     @State private var lastDragValue: CGFloat = 0
     
@@ -77,7 +77,7 @@ struct WideJoggerComponent: View {
                     // Bakgrunn
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.black)
-                        .frame(width: 60, height: 200)
+                        .frame(width: 200, height: 200)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(RetroTheme.dim, lineWidth: 1)
@@ -100,7 +100,7 @@ struct WideJoggerComponent: View {
                                         // Stor strek for heltal, liten for desimal
                                         Rectangle()
                                             .fill(RetroTheme.primary)
-                                            .frame(width: isMajorTick(index) ? 30 : 15, height: 2)
+                                            .frame(width: isMajorTick(index) ? 80 : 40, height: 2)
                                     }
                                     .position(x: geo.size.width / 2, y: yPos)
                                     .opacity(calculateOpacity(yPos: yPos, height: geo.size.height))
@@ -109,13 +109,13 @@ struct WideJoggerComponent: View {
                             }
                         }
                     }
-                    .frame(width: 60, height: 200)
+                    .frame(width: 200, height: 200)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     
                     // Senter-indikator (Glass-effekt over midten)
                     Rectangle()
                         .fill(RetroTheme.primary.opacity(0.1))
-                        .frame(width: 58, height: 24)
+                        .frame(width: 200, height: 24)
                         .overlay(
                             Rectangle()
                                 .stroke(RetroTheme.primary.opacity(0.5), lineWidth: 1)
@@ -129,7 +129,7 @@ struct WideJoggerComponent: View {
                         LinearGradient(colors: [.clear, .white.opacity(0.1)], startPoint: .leading, endPoint: .trailing)
                             .frame(width: 10)
                     }
-                    .frame(width: 60, height: 200)
+                    .frame(width: 200, height: 200)
                     .allowsHitTesting(false)
                 }
                 .gesture(
