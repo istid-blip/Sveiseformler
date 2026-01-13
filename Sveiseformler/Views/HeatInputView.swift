@@ -251,8 +251,7 @@ struct HeatInputView: View {
                             RetroJogWheel(
                                 value: binding(for: target),
                                 range: range(for: target),
-                                step: step(for: target),
-                                title: ""
+                                step: step(for: target)
                             )
                             .frame(height: 300)
                         }

@@ -23,11 +23,6 @@ struct ContentView: View {
         .dictionary
     ]
     
-   init() {
-       UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.blue, .font: UIFont.monospacedSystemFont(ofSize: 30, weight: .bold)]
-       UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor.green, .font: UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)]
-    UINavigationBar.appearance().barTintColor = .black
-   }
 
     var body: some View {
         NavigationView {
