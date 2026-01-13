@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct JogWheelView: View {
+struct CustomJogWheel: View {
     var title: String
     @Binding var value: Double
     var range: ClosedRange<Double> = 0...100
@@ -241,14 +241,4 @@ struct PrecisionKnobComponent: View {
             )
         }
     }
-}
-
-// MARK: - Preview
-#Preview {
-    JogWheelView(
-        title: "TEST CONTROL",
-        value: .constant(125.0),
-        range: 0...200,
-        step: 1.0
-    )
 }
