@@ -151,7 +151,7 @@ struct JogWheelTestContainer: View {
     var body: some View {
         ZStack {
             RetroTheme.background.ignoresSafeArea()
-            JogWheelView(
+            CustomJogWheel(
                 title: "TEST WHEEL",
                 value: $testValue,
                 range: 0...500,
