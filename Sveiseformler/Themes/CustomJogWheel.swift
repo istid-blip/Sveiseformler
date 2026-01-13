@@ -16,6 +16,8 @@ struct CustomJogWheel: View {
     // Vi bruker separate variabler for å teste de to hjulene uavhengig
     @State private var valueStyle1: Double
     @State private var valueStyle2: Double
+    @State private var valueStyle3: Double
+    @State private var valueStyle4: Double
     
     init(title: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double) {
         self.title = title
@@ -26,6 +28,8 @@ struct CustomJogWheel: View {
         // Initierer de interne test-verdiene med startverdien
         self._valueStyle1 = State(initialValue: value.wrappedValue)
         self._valueStyle2 = State(initialValue: value.wrappedValue)
+        self._valueStyle3 = State(initialValue: value.wrappedValue)
+        self._valueStyle4 = State(initialValue: value.wrappedValue)
     }
     
     var body: some View {
@@ -63,6 +67,42 @@ struct CustomJogWheel: View {
                         .foregroundColor(RetroTheme.dim)
                     
                     PrecisionKnobComponent(value: $valueStyle2, range: range, step: step)
+                }
+                
+                Divider().background(RetroTheme.dim.opacity(0.3))
+
+                // --- DESIGN 3: VERTICAL DRUM ---
+                VStack(spacing: 15) {
+                    Text("OPTION C: VERTICAL DRUM")
+                        .font(RetroTheme.font(size: 14))
+                        .foregroundColor(RetroTheme.dim)
+                    
+                    // Her bruker vi den nye visningen
+                    VerticalJogWheel(
+                        value: $valueStyle3, // Husk å lage en @State var valueStyle3 først
+                        range: range,
+                        step: step
+                    )
+                }
+                
+                Divider().background(RetroTheme.dim.opacity(0.3))
+
+                // --- DESIGN 4: HORIZONTAL RULER ---
+                VStack(spacing: 15) {
+                    Text("OPTION D: WIDE RULER")
+                        .font(RetroTheme.font(size: 14))
+                        .foregroundColor(RetroTheme.dim)
+                    
+                    // Vis verdien separat (siden linjalen er "uten tall")
+                    Text(String(format: "%.1f", valueStyle4))
+                        .font(RetroTheme.font(size: 32, weight: .bold))
+                        .foregroundColor(RetroTheme.primary)
+                    
+                    HorizontalScaleComponent(
+                        value: $valueStyle4,
+                        range: range,
+                        step: step
+                    )
                 }
                 
                 Spacer()

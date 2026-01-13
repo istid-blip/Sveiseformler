@@ -9,11 +9,12 @@ import SwiftUI
 
 struct ContentView: View {
     
-    // HER er magien: Vi deler funksjonene i to lister.
+    // Vi deler funksjonene i to lister.
     // Senere kan vi lage en funksjon som lar brukeren flytte elementer mellom disse to arrayene!
     @State private var mainMenuItems: [AppFeature] = [
         .heatInput,
-        .carbonEquivalent
+        .carbonEquivalent,
+        .wideverticaljogger
     ]
     
     @State private var moreMenuItems: [AppFeature] = [
@@ -22,11 +23,11 @@ struct ContentView: View {
         .dictionary
     ]
     
-    init() {
-        UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.green, .font: UIFont.monospacedSystemFont(ofSize: 30, weight: .bold)]
-        UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor.green, .font: UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)]
-        UINavigationBar.appearance().barTintColor = .black
-    }
+   init() {
+       UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.blue, .font: UIFont.monospacedSystemFont(ofSize: 30, weight: .bold)]
+       UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor.green, .font: UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)]
+    UINavigationBar.appearance().barTintColor = .black
+   }
 
     var body: some View {
         NavigationView {

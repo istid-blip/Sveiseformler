@@ -14,6 +14,7 @@ enum AppFeature: String, Identifiable, CaseIterable {
     case schaeffler
     case depositionRate
     case dictionary
+    case wideverticaljogger
     
     var id: String { rawValue }
     
@@ -25,7 +26,7 @@ enum AppFeature: String, Identifiable, CaseIterable {
         case .schaeffler: return "SCHAEFFLER CALC"
         case .depositionRate: return "DEPOSITION RATE"
         case .dictionary: return "WELD DICTIONARY"
-        }
+        case .wideverticaljogger: return "videverticaljogger"        }
     }
     
     // Hvilken View den skal åpne
@@ -37,6 +38,7 @@ enum AppFeature: String, Identifiable, CaseIterable {
         case .schaeffler: SchaefflerView()
         case .depositionRate: DepositionRateView()
         case .dictionary: DictionaryView()
+        case .wideverticaljogger: WideVerticalJogger()
         }
     }
 }
