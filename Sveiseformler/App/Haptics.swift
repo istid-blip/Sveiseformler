@@ -34,3 +34,4 @@ struct Haptics {
         generator.selectionChanged()
     }
 }
+

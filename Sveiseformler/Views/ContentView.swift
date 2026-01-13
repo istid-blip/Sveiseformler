@@ -1,6 +1,26 @@
+//
+//  ContentView.swift
+//  Sveiseformler
+//
+//  Created by Frode Halrynjo on 12/01/2026.
+//
+
 import SwiftUI
 
 struct ContentView: View {
+    
+    // HER er magien: Vi deler funksjonene i to lister.
+    // Senere kan vi lage en funksjon som lar brukeren flytte elementer mellom disse to arrayene!
+    @State private var mainMenuItems: [AppFeature] = [
+        .heatInput,
+        .carbonEquivalent
+    ]
+    
+    @State private var moreMenuItems: [AppFeature] = [
+        .schaeffler,
+        .depositionRate,
+        .dictionary
+    ]
     
     init() {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.green, .font: UIFont.monospacedSystemFont(ofSize: 30, weight: .bold)]
@@ -29,7 +49,6 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 20)
                 
-                // Denne teksten oversettes automatisk hvis nøkkelen finnes i Localizable
                 Text("SYSTEM STATUS: ONLINE")
                     .font(RetroTheme.font(size: 14))
                     .foregroundColor(RetroTheme.primary)
@@ -41,33 +60,46 @@ struct ContentView: View {
                 ScrollView {
                     VStack(spacing: 15) {
                         
-                        NavigationLink(destination: HeatInputView()) {
-                            TerminalMenuItem(label: "1. HEAT INPUT CALC")
+                        // 1. DYNAMISK HOVEDMENY
+                        // Vi går gjennom listen over "favoritter"
+                        ForEach(Array(mainMenuItems.enumerated()), id: \.element) { index, feature in
+                            NavigationLink(destination: feature.destination) {
+                                // Lager etikett som "1. HEAT INPUT..."
+                                TerminalMenuItem(label: "\(index + 1). \(feature.title)")
+                            }
                         }
                         
-                        NavigationLink(destination: CarbonEquivalentView()) {
-                            TerminalMenuItem(label: "2. CARBON EQUIV.")
-                        }
+                        // 2. LENKE TIL FLERE VERKTØY
+                        // Nummeret blir "antall i hovedmeny + 1"
+                        let moreMenuIndex = mainMenuItems.count + 1
                         
-                        NavigationLink(destination: SchaefflerView()) {
-                            TerminalMenuItem(label: "3. SCHAEFFLER CALC")
+                        NavigationLink(destination: MoreToolsView(features: moreMenuItems, startIndex: moreMenuIndex + 1)) {
+                             // Bruker en litt annen stil for å vise at dette er en undermeny
+                            HStack {
+                                Text("\(moreMenuIndex). ADDITIONAL TOOLS")
+                                    .font(RetroTheme.font(size: 18, weight: .bold))
+                                Spacer()
+                                Image(systemName: "chevron.right.square.fill")
+                            }
+                            .padding()
+                            .border(RetroTheme.primary, width: 1)
+                            .foregroundColor(RetroTheme.primary)
                         }
-                        
-                        NavigationLink(destination: DepositionRateView()) {
-                            TerminalMenuItem(label: "4. DEPOSITION RATE")
-                        }
-                        
-                        NavigationLink(destination: DictionaryView()) {
-                            TerminalMenuItem(label: "5. WELD DICTIONARY")
-                        }
-                        
+
                         Divider().background(RetroTheme.primary.opacity(0.5))
+                            .padding(.vertical, 10)
                         
-                        // --- NY KNAPP: MACHINE SETUP ---
+                        // 3. FASTE SYSTEM-VALG (Dev & Settings)
+                        
+                        // Jog Wheel Test (Beholder denne tilgjengelig for utvikling)
+                        NavigationLink(destination: JogWheelTestContainer()) {
+                            TerminalMenuItem(label: "DEV. JOG WHEEL TEST")
+                        }
+                        
                         NavigationLink(destination: SettingsView()) {
                             HStack {
-                                Image(systemName: "wrench.and.screwdriver.fill") // Mer "mekanisk" ikon
-                                Text("MACHINE SETUP") // Nytt navn!
+                                Image(systemName: "wrench.and.screwdriver.fill")
+                                Text("MACHINE SETUP")
                             }
                             .font(RetroTheme.font(size: 16, weight: .bold))
                             .foregroundColor(RetroTheme.primary)
@@ -93,9 +125,10 @@ struct ContentView: View {
     }
 }
 
-// Oppdatert Helper: Tar nå imot LocalizedStringKey
+// Hjelpe-structs (Hvis du ikke vil flytte dem til egne filer enda)
 struct TerminalMenuItem: View {
-    let label: LocalizedStringKey
+    // Endret fra LocalizedStringKey til String for å håndtere dynamisk tekst lettere
+    let label: String
     
     var body: some View {
         HStack {
@@ -108,5 +141,23 @@ struct TerminalMenuItem: View {
         .padding()
         .border(RetroTheme.primary, width: 1)
         .foregroundColor(RetroTheme.primary)
+    }
+}
+
+// Dev-container for testing av hjulet
+struct JogWheelTestContainer: View {
+    @State private var testValue: Double = 100.0
+    
+    var body: some View {
+        ZStack {
+            RetroTheme.background.ignoresSafeArea()
+            JogWheelView(
+                title: "TEST WHEEL",
+                value: $testValue,
+                range: 0...500,
+                step: 1.0
+            )
+        }
+        .navigationTitle("JOG WHEEL TEST")
     }
 }
