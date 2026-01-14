@@ -37,22 +37,19 @@ struct HeatInputView: View {
     @AppStorage("heat_efficiency") private var efficiency: Double = 0.8
     @AppStorage("heat_pass_counter") private var passCounter: Int = 1
     
-    // --- PERSISTENT JOB STATE (Endret her) ---
-    // Vi lagrer ID-en som en String i AppStorage slik at den huskes når appen lukkes/navigeres
+    // --- PERSISTENT JOB STATE ---
     @AppStorage("heat_active_job_id") private var storedJobID: String = ""
     @State private var currentJobName: String = ""
     
-    // Hjelper for å konvertere lagret String til UUID
-        var activeJobID: UUID? {
-            get {
-                if storedJobID.isEmpty { return nil }
-                return UUID(uuidString: storedJobID)
-            }
-            // VIKTIG: 'nonmutating' forteller Swift at vi oppdaterer AppStorage, ikke selve View-structen
-            nonmutating set {
-                storedJobID = newValue?.uuidString ?? ""
-            }
+    var activeJobID: UUID? {
+        get {
+            if storedJobID.isEmpty { return nil }
+            return UUID(uuidString: storedJobID)
         }
+        nonmutating set {
+            storedJobID = newValue?.uuidString ?? ""
+        }
+    }
     
     // --- PROSESSER ---
     private let processes = [
@@ -121,7 +118,6 @@ struct HeatInputView: View {
                                     .font(RetroTheme.font(size: 14, weight: .bold))
                                     .foregroundColor(RetroTheme.primary)
                                     .accentColor(RetroTheme.primary)
-                                    // Oppdater navnet i databasen hvis vi endrer det mens opptak pågår
                                     .onChange(of: currentJobName) { _, newName in
                                         if let id = activeJobID, let job = jobHistory.first(where: { $0.id == id }) {
                                             job.name = newName
@@ -135,7 +131,7 @@ struct HeatInputView: View {
                             .padding(.horizontal)
                             .padding(.bottom, -10)
                             
-                            // PROCESS & RESULT (Høy Z-Index for dropdown)
+                            // PROCESS & RESULT
                             HStack(alignment: .top, spacing: 0) {
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text("PROCESS").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
@@ -155,7 +151,7 @@ struct HeatInputView: View {
                                 .frame(minWidth: 160, alignment: .trailing)
                             }
                             .padding(.horizontal)
-                            .zIndex(1000) // Sikrer at dropdown ligger over formelen
+                            .zIndex(1000)
 
                             // --- FORMULA INTERFACE ---
                             VStack(spacing: 15) {
@@ -181,7 +177,7 @@ struct HeatInputView: View {
                                             SelectableInput(label: "time (s)", value: timeStr.toDouble, target: .time, currentFocus: focusedField, precision: 0) { focusedField = .time }
                                             
                                             Text("×").foregroundColor(RetroTheme.dim).padding(.top, 10)
-                                            HStack(alignment: .top, spacing: 0) { Text("10").font(RetroTheme.font(size: 16, weight: .bold)); Text("3").font(RetroTheme.font(size: 10, weight: .bold)).baselineOffset(8) }.fixedSize(horizontal: true, vertical: false).foregroundColor(RetroTheme.dim).padding(.top, 8) //brukte fixedsize for å få alt inn på en linje
+                                            HStack(alignment: .top, spacing: 0) { Text("10").font(RetroTheme.font(size: 16, weight: .bold)); Text("3").font(RetroTheme.font(size: 10, weight: .bold)).baselineOffset(8) }.fixedSize(horizontal: true, vertical: false).foregroundColor(RetroTheme.dim).padding(.top, 8)
                                         }
                                     }
                                 }
@@ -189,7 +185,7 @@ struct HeatInputView: View {
                             .padding()
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(RetroTheme.dim, lineWidth: 1).opacity(0.5))
                             .padding(.horizontal)
-                            .zIndex(1) // Lavere enn Process seksjonen
+                            .zIndex(1)
                             
                             // --- ACTIONS & HISTORY ---
                             ScrollView {
@@ -228,7 +224,7 @@ struct HeatInputView: View {
                         }
                     }
                     
-                    // 2. TROMMEL OVERLAY
+                    // 2. TROMMEL OVERLAY (ENDRET)
                     if let target = focusedField {
                         VStack(spacing: 0) {
                             HStack {
@@ -248,7 +244,8 @@ struct HeatInputView: View {
                             .background(Color.black)
                             .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1).frame(height: 1), alignment: .top)
 
-                            RetroJogWheel(
+                            // HER ER ENDRINGEN: AcceleratedWideJogger brukes i stedet for RetroJogWheel
+                            AcceleratedWideJogger(
                                 value: binding(for: target),
                                 range: range(for: target),
                                 step: step(for: target)
@@ -303,7 +300,7 @@ struct HeatInputView: View {
                     .font(RetroTheme.font(size: 10))
                     .foregroundColor(RetroTheme.dim)
                     .padding(4)
-                    .fixedSize(horizontal: true, vertical: false) // Brukte denne for å få all tekst inn på en linje under SelectableInput
+                    .fixedSize(horizontal: true, vertical: false)
             }
         }
         .buttonStyle(PlainButtonStyle())
@@ -349,18 +346,14 @@ struct HeatInputView: View {
         Haptics.selection()
     }
     
-    // --- NY LOGIKK FOR PERSISTENS ---
+    // --- PERSISTENS LOGIKK ---
     
     func restoreActiveJob() {
-        // Hvis vi har en lagret ID...
         if let id = activeJobID {
-            // ...sjekk om jobben faktisk finnes i historikken
             if let existingJob = jobHistory.first(where: { $0.id == id }) {
-                // Hvis ja, sett navnet i UI og oppdater pass-telleren
                 currentJobName = existingJob.name
                 passCounter = existingJob.passes.count + 1
             } else {
-                // Hvis jobben er slettet (men ID henger igjen), nullstill
                 activeJobID = nil
                 currentJobName = ""
                 passCounter = 1
@@ -378,10 +371,8 @@ struct HeatInputView: View {
     func logPass() {
             let job: WeldGroup
             
-            // 1. Finn eller opprett jobb
             if let id = activeJobID, let existingJob = jobHistory.first(where: { $0.id == id }) {
                 job = existingJob
-                // Oppdater navn hvis endret
                 if !currentJobName.isEmpty && currentJobName != job.name {
                     job.name = currentJobName
                 }
@@ -393,7 +384,6 @@ struct HeatInputView: View {
                 currentJobName = name
             }
             
-            // 2. Lagre passet
             let newPass = SavedCalculation(
                 name: "Pass #\(passCounter)",
                 resultValue: String(format: "%.2f kJ/mm", heatInput),
@@ -408,9 +398,6 @@ struct HeatInputView: View {
             newPass.group = job
             passCounter += 1
             
-            // 3. VIKTIG: Oppdater datoen på jobben!
-            // Dette trigger oppdatering av UI-listen slik at "passes recorded" øker med en gang,
-            // og holder jobben øverst i listen.
             job.date = Date()
             
             try? modelContext.save()
