@@ -224,39 +224,44 @@ struct HeatInputView: View {
                         }
                     }
                     
-                    // 2. TROMMEL OVERLAY (ENDRET)
-                    if let target = focusedField {
-                        VStack(spacing: 0) {
-                            HStack {
-                                Text(title(for: target))
-                                    .font(RetroTheme.font(size: 12, weight: .bold))
-                                    .foregroundColor(RetroTheme.primary)
-                                    .padding(.leading)
-                                Spacer()
-                                Button(action: { withAnimation { focusedField = nil } }) {
-                                    Image(systemName: "chevron.down")
-                                        .font(.title3)
-                                        .foregroundColor(RetroTheme.dim)
-                                }
-                                .padding(.trailing)
-                                .padding(.vertical, 10)
-                            }
-                            .background(Color.black)
-                            .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1).frame(height: 1), alignment: .top)
-
-                            // HER ER ENDRINGEN: AcceleratedWideJogger brukes i stedet for RetroJogWheel
-                            AcceleratedWideJogger(
-                                value: binding(for: target),
-                                range: range(for: target),
-                                step: step(for: target)
-                            )
-                            .frame(height: 300)
-                        }
-                        .background(Color.black)
-                        .transition(.move(edge: .bottom))
-                        .zIndex(100)
-                        .onTapGesture { }
-                    }
+                    // 2. TROMMEL OVERLAY (FLYTENDE & INTERAKTIVT)
+                                        if let target = focusedField {
+                                            VStack(spacing: 0) {
+                                                
+                                                // DEL 1: PUSTELUKE (Lar deg trykke på tallfeltene bak)
+                                                // Ved å bruke contentShape(Rectangle) men IKKE ha noen gesture,
+                                                // samt bruke .allowsHitTesting(false), sikrer vi at trykk her går "igjennom"
+                                                // overlayet og treffer knappene (Voltage, Current osv.) bak.
+                                                Color.clear
+                                                    .allowsHitTesting(false)
+                                                
+                                                // DEL 2: BLOKKERINGSSONE + HJULET
+                                                ZStack {
+                                                    // "Skjoldet": En usynlig bakgrunn som dekker historikk-området.
+                                                    // Denne fanger opp trykk slik at du IKKE scroller historikken bak,
+                                                    // men vi legger på en gesture slik at du kan lukke hjulet ved å trykke på siden av det.
+                                                    Color.black.opacity(0.01)
+                                                        .contentShape(Rectangle())
+                                                        .onTapGesture {
+                                                            withAnimation { focusedField = nil }
+                                                        }
+                                                    
+                                                    // Selve hjulet
+                                                    AcceleratedWideJogger(
+                                                        value: binding(for: target),
+                                                        range: range(for: target),
+                                                        step: step(for: target)
+                                                    )
+                                                    .padding(.bottom, 50) // Løfter hjulet opp fra bunnen
+                                                }
+                                                .frame(height: 380) // <-- VIKTIG: Juster denne høyden!
+                                                // Denne høyden må være høy nok til å dekke historikken,
+                                                // men lav nok til at den ikke dekker tall-knappene dine.
+                                            }
+                                            .ignoresSafeArea(edges: .bottom)
+                                            .transition(.move(edge: .bottom))
+                                            .zIndex(100)
+                                        }
                 }
             }
         }

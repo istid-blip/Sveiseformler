@@ -10,11 +10,12 @@ struct CarbonEquivalentView: View {
            sort: \SavedCalculation.timestamp, order: .reverse)
     private var history: [SavedCalculation]
     
-    // 2. Focus State for Keyboard Shuffling
-    enum Field: Int, Hashable, CaseIterable {
-        case c, mn, cr, mo, v, ni, cu, name
+    // 2. Wheel Focus State
+    enum InputTarget: String, Identifiable {
+        case c, mn, cr, mo, v, ni, cu
+        var id: String { rawValue }
     }
-    @FocusState private var focusedField: Field?
+    @State private var focusedField: InputTarget? = nil
     
     // 3. Inputs
     @AppStorage("ce_c") private var c: String = ""
@@ -24,7 +25,10 @@ struct CarbonEquivalentView: View {
     @AppStorage("ce_v") private var v: String = ""
     @AppStorage("ce_ni") private var ni: String = ""
     @AppStorage("ce_cu") private var cu: String = ""
+    
+    // Navn-feltet beholder vi som vanlig tekstfelt siden det er tekst
     @State private var customName: String = ""
+    @FocusState private var nameFieldFocused: Bool
     
     var ceValue: Double {
         let C_val = c.toDouble
@@ -61,159 +65,164 @@ struct CarbonEquivalentView: View {
                 }
                 .padding()
                 
-                ScrollView {
-                    VStack(spacing: 25) {
-                        // --- RESULT MONITOR ---
-                        VStack(spacing: 5) {
-                            Text("CARBON EQUIVALENT (CE)")
-                                .font(RetroTheme.font(size: 12))
-                                .foregroundColor(RetroTheme.dim)
-                            Text(String(format: "%.3f", ceValue))
-                                .font(RetroTheme.font(size: 40, weight: .black))
-                                .foregroundColor(isCritical ? Color.red : RetroTheme.primary)
-                                .shadow(color: (isCritical ? Color.red : RetroTheme.primary).opacity(0.6), radius: 8)
-                        }
-                        .padding(.top, 10)
+                // --- MAIN CONTENT ---
+                ZStack(alignment: .bottom) {
+                    
+                    ScrollView {
+                        VStack(spacing: 10) {
+                            // --- RESULT MONITOR ---
+                            VStack(spacing: 5) {
+                                Text("CARBON EQUIVALENT (CE)")
+                                    .font(RetroTheme.font(size: 12))
+                                    .foregroundColor(RetroTheme.dim)
+                                Text(String(format: "%.3f", ceValue))
+                                    .font(RetroTheme.font(size: 40, weight: .black))
+                                    .foregroundColor(isCritical ? Color.red : RetroTheme.primary)
+                                    .shadow(color: (isCritical ? Color.red : RetroTheme.primary).opacity(0.6), radius: 8)
+                            }
+                            .padding(.top, 0)
 
-                        // --- FORMULA VISUALIZATION ---
-                        VStack(alignment: .leading, spacing: 20) {
-                            // Row 1: C + (Mn / 6)
-                            HStack(alignment: .center, spacing: 10) {
-                                EquationInput(label: "C", text: $c, field: .c, focusedField: $focusedField)
-                                Text("+").foregroundColor(RetroTheme.dim)
-                                VStack(spacing: 2) {
-                                    EquationInput(label: "Mn", text: $mn, field: .mn, focusedField: $focusedField)
-                                    Rectangle().fill(RetroTheme.primary).frame(height: 2)
-                                    Text("6").font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.dim)
-                                }.frame(width: 60)
-                            }
-                            
-                            // Row 2: + (Cr+Mo+V) / 5
-                            HStack(alignment: .center, spacing: 10) {
-                                Text("+").foregroundColor(RetroTheme.dim)
-                                VStack(spacing: 2) {
-                                    HStack(spacing: 5) {
-                                        EquationInput(label: "Cr", text: $cr, field: .cr, focusedField: $focusedField)
-                                        Text("+").foregroundColor(RetroTheme.dim)
-                                        EquationInput(label: "Mo", text: $mo, field: .mo, focusedField: $focusedField)
-                                        Text("+").foregroundColor(RetroTheme.dim)
-                                        EquationInput(label: "V", text: $v, field: .v, focusedField: $focusedField)
-                                    }
-                                    Rectangle().fill(RetroTheme.primary).frame(height: 2)
-                                    Text("5").font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.dim)
+                            // --- FORMULA VISUALIZATION ---
+                            VStack(alignment: .leading, spacing: 5) {
+                                // Row 1: C + (Mn / 6)
+                                HStack(alignment: .center, spacing: 10) {
+                                    SelectableEquationInput(label: "C", value: c.toDouble, target: .c, currentFocus: focusedField) { focusedField = .c }
+                                    Text("+").foregroundColor(RetroTheme.dim)
+                                    VStack(spacing: 2) {
+                                        SelectableEquationInput(label: "Mn", value: mn.toDouble, target: .mn, currentFocus: focusedField) { focusedField = .mn }
+                                        Rectangle().fill(RetroTheme.primary).frame(height: 2)
+                                        Text("6").font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.dim)
+                                    }.frame(width: 60)
                                 }
-                            }
-                            
-                            // Row 3: + (Ni+Cu) / 15
-                            HStack(alignment: .center, spacing: 10) {
-                                Text("+").foregroundColor(RetroTheme.dim)
-                                VStack(spacing: 2) {
-                                    HStack(spacing: 5) {
-                                        EquationInput(label: "Ni", text: $ni, field: .ni, focusedField: $focusedField)
-                                        Text("+").foregroundColor(RetroTheme.dim)
-                                        EquationInput(label: "Cu", text: $cu, field: .cu, focusedField: $focusedField)
-                                    }
-                                    Rectangle().fill(RetroTheme.primary).frame(height: 2)
-                                    Text("15").font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.dim)
-                                }
-                            }
-                        }
-                        .padding()
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(RetroTheme.dim, lineWidth: 1).opacity(0.5))
-                        .padding(.horizontal)
-                        
-                        // --- SAVE & LOGS ---
-                        VStack(alignment: .leading, spacing: 15) {
-                            HStack {
-                                TextField("ID...", text: $customName)
-                                    .focused($focusedField, equals: .name)
-                                    .font(RetroTheme.font(size: 16))
-                                    .foregroundColor(RetroTheme.primary)
-                                    .padding(10)
-                                    .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
-                                    .tint(RetroTheme.primary)
                                 
-                                Button(action: saveItem) {
-                                    Text("SAVE")
+                                // Row 2: + (Cr+Mo+V) / 5
+                                HStack(alignment: .center, spacing: 10) {
+                                    Text("+").foregroundColor(RetroTheme.dim)
+                                    VStack(spacing: 2) {
+                                        HStack(spacing: 5) {
+                                            SelectableEquationInput(label: "Cr", value: cr.toDouble, target: .cr, currentFocus: focusedField) { focusedField = .cr }
+                                            Text("+").foregroundColor(RetroTheme.dim)
+                                            SelectableEquationInput(label: "Mo", value: mo.toDouble, target: .mo, currentFocus: focusedField) { focusedField = .mo }
+                                            Text("+").foregroundColor(RetroTheme.dim)
+                                            SelectableEquationInput(label: "V", value: v.toDouble, target: .v, currentFocus: focusedField) { focusedField = .v }
+                                        }
+                                        Rectangle().fill(RetroTheme.primary).frame(height: 2)
+                                        Text("5").font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.dim)
+                                    }
+                                }
+                                
+                                // Row 3: + (Ni+Cu) / 15
+                                HStack(alignment: .center, spacing: 10) {
+                                    Text("+").foregroundColor(RetroTheme.dim)
+                                    VStack(spacing: 2) {
+                                        HStack(spacing: 5) {
+                                            SelectableEquationInput(label: "Ni", value: ni.toDouble, target: .ni, currentFocus: focusedField) { focusedField = .ni }
+                                            Text("+").foregroundColor(RetroTheme.dim)
+                                            SelectableEquationInput(label: "Cu", value: cu.toDouble, target: .cu, currentFocus: focusedField) { focusedField = .cu }
+                                        }
+                                        Rectangle().fill(RetroTheme.primary).frame(height: 2)
+                                        Text("15").font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.dim)
+                                    }
+                                }
+                            }
+                            .padding()
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(RetroTheme.dim, lineWidth: 1).opacity(0.5))
+                            .padding(.horizontal)
+                            
+                            // --- SAVE & LOGS ---
+                            VStack(alignment: .leading, spacing: 15) {
+                                HStack {
+                                    TextField("ID...", text: $customName)
+                                        .focused($nameFieldFocused)
+                                        .font(RetroTheme.font(size: 16))
+                                        .foregroundColor(RetroTheme.primary)
+                                        .padding(10)
+                                        .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
+                                        .tint(RetroTheme.primary)
+                                        .onTapGesture {
+                                            // Lukk hjulet hvis man trykker på tekstfeltet
+                                            focusedField = nil
+                                        }
+                                    
+                                    Button(action: saveItem) {
+                                        Text("SAVE")
+                                            .font(RetroTheme.font(size: 14, weight: .bold))
+                                            .padding()
+                                            .background(customName.isEmpty ? RetroTheme.dim : RetroTheme.primary)
+                                            .foregroundColor(Color.black)
+                                    }
+                                    .disabled(customName.isEmpty)
+                                }
+                                
+                                // Show History Logs
+                                if !history.isEmpty {
+                                    Text("> LOGS")
                                         .font(RetroTheme.font(size: 14, weight: .bold))
-                                        .padding()
-                                        .background(customName.isEmpty ? RetroTheme.dim : RetroTheme.primary)
-                                        .foregroundColor(Color.black)
-                                }
-                                .disabled(customName.isEmpty)
-                            }
-                            
-                            // Show History Logs
-                            if !history.isEmpty {
-                                Text("> LOGS")
-                                    .font(RetroTheme.font(size: 14, weight: .bold))
-                                    .foregroundColor(RetroTheme.primary)
-                                    .padding(.top, 10)
-                                
-                                ForEach(history.prefix(5)) { item in
-                                    RetroHistoryRow(item: item) {
-                                        deleteItem(item)
+                                        .foregroundColor(RetroTheme.primary)
+                                        .padding(.top, 10)
+                                    
+                                    ForEach(history.prefix(5)) { item in
+                                        RetroHistoryRow(item: item) {
+                                            deleteItem(item)
+                                        }
                                     }
                                 }
                             }
+                            .padding(.horizontal)
+                            .padding(.bottom, 320) // Ekstra plass i bunnen for hjulet
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 50)
+                    }
+                    .onTapGesture {
+                        if focusedField != nil {
+                            withAnimation { focusedField = nil }
+                        }
+                        nameFieldFocused = false
+                    }
+                    
+                    // --- TROMMEL OVERLAY (FLYTENDE) ---
+                    if let target = focusedField {
+                        VStack(spacing: 0) {
+                            
+                            // PUSTELUKE: Lar deg trykke på knappene bak overlayet
+                            Color.clear
+                                .allowsHitTesting(false)
+                            
+                            ZStack {
+                                // SKJOLD: Hindrer scrolling i historikken bak hjulet
+                                Color.black.opacity(0.01)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        withAnimation { focusedField = nil }
+                                    }
+                                
+                                // Selve hjulet
+                                AcceleratedWideJogger(
+                                    value: binding(for: target),
+                                    range: range(for: target),
+                                    step: step(for: target)
+                                )
+                                .padding(.bottom, 50)
+                            }
+                            .frame(height: 380)
+                        }
+                        .ignoresSafeArea(edges: .bottom)
+                        .transition(.move(edge: .bottom))
+                        .zIndex(100)
                     }
                 }
             }
         }
         .crtScreen()
         .navigationBarHidden(true)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                // Done button on the left
-                Button("DONE") {
-                    focusedField = nil
-                }
-                .font(RetroTheme.font(size: 14, weight: .bold))
-                .foregroundColor(RetroTheme.primary)
-                
-                Spacer()
-                
-                // Horizontal navigation arrows on the right
-                HStack(spacing: 20) {
-                    Button(action: moveFocusBackward) {
-                        Image(systemName: "chevron.left")
-                    }
-                    .foregroundColor(RetroTheme.primary)
-                    
-                    Button(action: moveFocusForward) {
-                        Image(systemName: "chevron.right")
-                    }
-                    .foregroundColor(RetroTheme.primary)
-                }
-            }
-        }
     }
     
     // --- Logic Helpers ---
-    
-    private func moveFocusForward() {
-        guard let current = focusedField else { return }
-        let allCases = Field.allCases
-        if let currentIndex = allCases.firstIndex(of: current), currentIndex < allCases.count - 1 {
-            focusedField = allCases[currentIndex + 1]
-        }
-    }
-    
-    private func moveFocusBackward() {
-        guard let current = focusedField else { return }
-        let allCases = Field.allCases
-        if let currentIndex = allCases.firstIndex(of: current), currentIndex > 0 {
-            focusedField = allCases[currentIndex - 1]
-        }
-    }
 
     func saveItem() {
         let val = String(format: "%.3f", ceValue)
         modelContext.insert(SavedCalculation(name: customName, resultValue: val, category: "CE"))
         customName = ""
+        nameFieldFocused = false
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
     
@@ -222,48 +231,89 @@ struct CarbonEquivalentView: View {
             modelContext.delete(item)
         }
     }
-}
-
-// --- Local Helpers ---
-
-// En tilpasset input-boks som fungerer med FocusState-navigasjonen i denne filen
-struct EquationInput: View {
-    let label: String
-    @Binding var text: String
-    let field: CarbonEquivalentView.Field
-    @FocusState.Binding var focusedField: CarbonEquivalentView.Field?
-
-    var body: some View {
-        VStack(spacing: 0) {
-            TextField("", text: $text)
-                .focused($focusedField, equals: field)
-                .keyboardType(.decimalPad)
-                .font(RetroTheme.font(size: 16, weight: .bold))
-                .foregroundColor(RetroTheme.primary)
-                .tint(RetroTheme.primary)
-                .multilineTextAlignment(.center)
-                .frame(minWidth: 45)
-                .padding(.vertical, 5)
-                .background(Color.black)
-                .overlay(
-                    Rectangle()
-                        .stroke(focusedField == field ? RetroTheme.primary : RetroTheme.dim, lineWidth: 1)
-                )
-
-            Text(label)
-                .font(RetroTheme.font(size: 10))
-                .foregroundColor(focusedField == field ? RetroTheme.primary : RetroTheme.dim)
-                .padding(.top, 4)
+    
+    // --- Wheel Configuration Helpers ---
+    
+    func binding(for field: InputTarget) -> Binding<Double> {
+        switch field {
+        case .c: return Binding(get: { c.toDouble }, set: { c = String(format: "%.2f", $0) })
+        case .mn: return Binding(get: { mn.toDouble }, set: { mn = String(format: "%.2f", $0) })
+        case .cr: return Binding(get: { cr.toDouble }, set: { cr = String(format: "%.2f", $0) })
+        case .mo: return Binding(get: { mo.toDouble }, set: { mo = String(format: "%.2f", $0) })
+        case .v: return Binding(get: { v.toDouble }, set: { v = String(format: "%.2f", $0) })
+        case .ni: return Binding(get: { ni.toDouble }, set: { ni = String(format: "%.2f", $0) })
+        case .cu: return Binding(get: { cu.toDouble }, set: { cu = String(format: "%.2f", $0) })
+        }
+    }
+    
+    func range(for field: InputTarget) -> ClosedRange<Double> {
+        // De fleste legeringselementer er mellom 0 og 5-10%
+        return 0...10.0
+    }
+    
+    func step(for field: InputTarget) -> Double {
+        // Kjemisk analyse trenger ofte hundredeler (0.01)
+        return 0.01
+    }
+    
+    func title(for field: InputTarget) -> String {
+        switch field {
+        case .c: return "Carbon (C)"
+        case .mn: return "Manganese (Mn)"
+        case .cr: return "Chromium (Cr)"
+        case .mo: return "Molybdenum (Mo)"
+        case .v: return "Vanadium (V)"
+        case .ni: return "Nickel (Ni)"
+        case .cu: return "Copper (Cu)"
         }
     }
 }
 
-// --- Extensions ---
+// --- Local Helpers ---
 
-// Denne fikser feilen med "value of type 'String' has no member 'toDouble'"
+// En tilpasset knapp som åpner hjulet (erstatter tekstfeltet)
+struct SelectableEquationInput: View {
+    let label: String
+    let value: Double
+    let target: CarbonEquivalentView.InputTarget
+    let currentFocus: CarbonEquivalentView.InputTarget?
+    let action: () -> Void
+
+    var body: some View {
+        let isSelected = (currentFocus == target)
+        
+        Button(action: {
+            withAnimation(.spring(response: 0.3)) {
+                action()
+                Haptics.selection()
+            }
+        }) {
+            VStack(spacing: 0) {
+                Text(String(format: "%.2f", value))
+                    .font(RetroTheme.font(size: 24, weight: .bold))
+                    .foregroundColor(RetroTheme.primary)
+                    .frame(minWidth: 70)
+                    .padding(.vertical, 5)
+                    .background(Color.black)
+                    .overlay(
+                        Rectangle()
+                            .stroke(isSelected ? RetroTheme.primary : RetroTheme.dim, lineWidth: isSelected ? 2 : 1)
+                    )
+
+                Text(label)
+                    .font(RetroTheme.font(size: 10))
+                    .foregroundColor(isSelected ? RetroTheme.primary : RetroTheme.dim)
+                    .padding(.top, 4)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// --- Extensions ---
+// (Hvis denne allerede ligger i en annen fil kan du fjerne den her, men den skader ikke)
 extension String {
     var toDouble: Double {
-        // Erstatter komma med punktum og konverterer til Double
         let cleanString = self.replacingOccurrences(of: ",", with: ".")
         return Double(cleanString) ?? 0.0
     }

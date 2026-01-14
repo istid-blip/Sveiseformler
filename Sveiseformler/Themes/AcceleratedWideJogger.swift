@@ -22,13 +22,13 @@ struct AcceleratedWideJogger: View {
                 // Bakgrunn (Rammen)
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.black) // Hjulet har sin egen bakgrunn
-                    .frame(width: 220, height: 220) // Litt bredere ramme for å ramme inn
+                    .frame(width: 300, height: 250) // Litt bredere ramme for å ramme inn
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(RetroTheme.dim, lineWidth: 1)
                     )
                     // "Flyte"-effekt: Kraftig skygge
-                    .shadow(color: .black.opacity(0.8), radius: 15, x: 0, y: 10)
+                    .shadow(color: .black.opacity(0.8), radius: 15, x: 0, y: 15)
                 
                 // Trommel-visning (Klippes til rammen)
                 GeometryReader { geo in
@@ -37,7 +37,7 @@ struct AcceleratedWideJogger: View {
                     ZStack {
                         ForEach(getVisibleIndices(), id: \.self) { index in
                             let distanceFromCenter = (CGFloat(index) - CGFloat(value / step)) * spacing
-                            let yPos = midY - distanceFromCenter
+                            let yPos = midY + distanceFromCenter
                             
                             if yPos > -20 && yPos < geo.size.height + 20 {
                                 HStack {
@@ -52,13 +52,13 @@ struct AcceleratedWideJogger: View {
                         }
                     }
                 }
-                .frame(width: 220, height: 220)
+                .frame(width: 300, height: 250)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 
                 // Senter-indikator (Glass-effekt)
                 Rectangle()
                     .fill(RetroTheme.primary.opacity(0.1))
-                    .frame(width: 220, height: 24)
+                    .frame(width: 300, height: 24)
                     .overlay(
                         Rectangle()
                             .stroke(RetroTheme.primary.opacity(0.5), lineWidth: 1)
@@ -73,7 +73,7 @@ struct AcceleratedWideJogger: View {
                     LinearGradient(colors: [.clear, .white.opacity(0.1)], startPoint: .leading, endPoint: .trailing)
                         .frame(width: 15)
                 }
-                .frame(width: 220, height: 220)
+                .frame(width: 300, height: 250)
                 .allowsHitTesting(false)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
