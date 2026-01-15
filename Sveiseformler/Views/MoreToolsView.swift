@@ -32,7 +32,9 @@ struct MoreToolsView: View {
                     NavigationLink(destination: feature.destination) {
                         // Vi regner ut riktig nummer basert på start-indeksen
                         let number = startIndex + index
-                        TerminalMenuItem(label: "\(number). \(feature.title)")
+                        
+                        // HER ER ENDRINGEN: Vi bruker nå index og titleKey separat
+                        TerminalMenuItem(index: number, titleKey: feature.title)
                     }
                 }
                 

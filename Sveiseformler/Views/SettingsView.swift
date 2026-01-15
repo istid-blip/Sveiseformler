@@ -9,14 +9,17 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     
     // --- LAGREDE INNSTILLINGER ---
-    @AppStorage("app_language") private var selectedLanguage: String = "no"
+    // VIKTIG: Endret default fra "no" til "nb" for å matche oversettelsesfilen
+    @AppStorage("app_language") private var selectedLanguage: String = "nb"
     @AppStorage("enable_haptics") private var enableHaptics: Bool = true
     @AppStorage("default_process_code") private var defaultProcess: String = "135/136"
     
     @State private var showDeleteConfirmation = false
     
     private let languageOptions = [
-        LanguageOption(id: "no", name: "NORSK (NO)"),
+        // VIKTIG: Endret id fra "no" til "nb".
+        // Hvis denne er "no", finner ikke iOS oversettelsene dine som ligger under "nb".
+        LanguageOption(id: "nb", name: "NORSK (NO)"),
         LanguageOption(id: "en", name: "ENGLISH (EN)")
     ]
     
@@ -76,7 +79,6 @@ struct SettingsView: View {
                         
                         // SECTION 2: I/O CONFIG
                         SettingsSection(title: "I/O CONFIG") {
-                            // CRT TOGGLE ER FJERNET
                             RetroToggleRow(title: "HAPTIC FEEDBACK", isOn: $enableHaptics)
                         }
                         .zIndex(90)
@@ -127,7 +129,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .crtScreen() // Alltid på!
+        .crtScreen()
         .navigationBarHidden(true)
         .alert("CONFIRM WIPE", isPresented: $showDeleteConfirmation) {
             Button("CANCEL", role: .cancel) { }
@@ -138,7 +140,6 @@ struct SettingsView: View {
     }
 }
 
-// HJELPERE
 struct SettingsSection<Content: View>: View {
     let title: String
     let content: Content
@@ -166,7 +167,6 @@ struct RetroToggleRow: View {
             Spacer()
             Button(action: {
                 isOn.toggle()
-                // Bruker Haptics service for å gi feedback
                 if isOn { Haptics.play(.medium) }
             }) {
                 HStack(spacing: 8) {

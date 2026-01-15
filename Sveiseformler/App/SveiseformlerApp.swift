@@ -3,11 +3,10 @@ import SwiftData
 
 @main
 struct SveiseformlerApp: App {
-    // 1. Hent valgt språk (standard "no" for norsk)
-    @AppStorage("app_language") private var languageCode: String = "no"
+    // 1. Hent valgt språk. Merk at vi endret default til "nb" tidligere.
+    @AppStorage("app_language") private var languageCode: String = "nb"
 
     var sharedModelContainer: ModelContainer = {
-        // VIKTIG: Legg til WeldGroup.self her for at jobbhistorikken skal virke!
         let schema = Schema([
             SavedCalculation.self,
             DictionaryTerm.self,
@@ -25,8 +24,12 @@ struct SveiseformlerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                // 2. Her injiserer vi språket til hele appen!
+                // 2. Setter språket i miljøet
                 .environment(\.locale, Locale(identifier: languageCode))
+                // 3. DETTE ER TRIKSET:
+                // Ved å sette .id til språkkoden, tvinger vi hele appen til
+                // å lastes inn på nytt når språket endres.
+                .id(languageCode)
         }
         .modelContainer(sharedModelContainer)
     }

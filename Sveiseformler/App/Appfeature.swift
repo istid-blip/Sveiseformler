@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-// Dette er en liste over alle verktøyene vi kan flytte på
 enum AppFeature: String, Identifiable, CaseIterable {
     case heatInput
     case carbonEquivalent
@@ -18,18 +17,19 @@ enum AppFeature: String, Identifiable, CaseIterable {
     
     var id: String { rawValue }
     
-    // Teksten som vises i menyen
-    var title: String {
+    // ENDRING: Endret fra String til LocalizedStringKey
+    var title: LocalizedStringKey {
         switch self {
         case .heatInput: return "HEAT INPUT CALC"
         case .carbonEquivalent: return "CARBON EQUIV."
         case .schaeffler: return "SCHAEFFLER CALC"
         case .depositionRate: return "DEPOSITION RATE"
         case .dictionary: return "WELD DICTIONARY"
-        case .wideverticaljogger: return "videverticaljogger"        }
+        // Fikset skrivefeil ("vide" -> "WIDE") og satte til store bokstaver
+        case .wideverticaljogger: return "WIDE VERTICAL JOGGER"
+        }
     }
     
-    // Hvilken View den skal åpne
     @ViewBuilder
     var destination: some View {
         switch self {
