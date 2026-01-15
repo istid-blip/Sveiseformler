@@ -141,17 +141,26 @@ struct SettingsView: View {
 }
 
 struct SettingsSection<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey // <--- ENDRET FRA String TIL LocalizedStringKey
     let content: Content
-    init(title: String, @ViewBuilder content: () -> Content) {
+    
+    // Vi endrer init til å ta imot LocalizedStringKey
+    init(title: LocalizedStringKey, @ViewBuilder content: () -> Content) {
         self.title = title
         self.content = content()
     }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            Text("> \(title)")
-                .font(RetroTheme.font(size: 12, weight: .bold))
-                .foregroundColor(RetroTheme.dim)
+            // Vi fjerner " > " fra interpolation og legger den i Text,
+            // slik at selve tittelen kan oversettes.
+            HStack(spacing: 0) {
+                Text("> ")
+                Text(title) // Nå oversettes tittelen automatisk!
+            }
+            .font(RetroTheme.font(size: 12, weight: .bold))
+            .foregroundColor(RetroTheme.dim)
+            
             content
         }
     }
