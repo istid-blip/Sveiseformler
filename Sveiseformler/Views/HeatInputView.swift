@@ -108,92 +108,94 @@ struct HeatInputView: View {
                 // --- MAIN CONTENT ---
                 ZStack(alignment: .bottom) {
                     
-                    // 1. SCROLLABLE CONTENT
-                    ScrollView {
-                        VStack(spacing: 25) {
-                            
-                            // PROCESS & RESULT
-                            HStack(alignment: .top, spacing: 0) {
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text("PROCESS").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
-                                    RetroDropdown(title: "PROCESS", selection: currentProcess, options: processes, onSelect: { selectProcess($0) }, itemText: { $0.name }, itemDetail: { "ISO 4063: \($0.code)" })
-
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    VStack(spacing: 25) {
+                        
+                        // PROCESS & RESULT
+                        HStack(alignment: .top, spacing: 0) {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text("PROCESS").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
+                                RetroDropdown(title: "PROCESS", selection: currentProcess, options: processes, onSelect: { selectProcess($0) }, itemText: { $0.name }, itemDetail: { "ISO 4063: \($0.code)" })
                                 
-                                Spacer(minLength: 20)
-                                
-                                VStack(alignment: .trailing, spacing: 1) {
-                                    Text("CURRENT PASS (kJ/mm)").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
-                                    Text(String(format: "%.2f", heatInput)).font(RetroTheme.font(size: 36, weight: .black)).foregroundColor(RetroTheme.primary).shadow(color: RetroTheme.primary.opacity(0.5), radius: 5).minimumScaleFactor(0.8)
-                                    if activeJobID != nil {
-                                        Text("• STORING").font(RetroTheme.font(size: 10, weight: .bold)).foregroundColor(.red).blinkEffect()
-                                    }
-                                }
-                                .frame(minWidth: 160, alignment: .trailing)
                             }
-                            .padding(.horizontal)
-                            .zIndex(1000)
-
-                            // --- FORMULA INTERFACE ---
-                            VStack(spacing: 15) {
-                                HStack(alignment: .center, spacing: 8) {
-                                    VStack(spacing: 0) {
-                                        Text("ISO 17671").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim).padding(4)
-                                        Text(String(format: "%.1f", efficiency)).font(RetroTheme.font(size: 20, weight: .bold)).foregroundColor(RetroTheme.primary).padding(.horizontal, 12).padding(.vertical, 8)
-                                        Text("k-factor").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim).padding(4)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            Spacer(minLength: 20)
+                            
+                            VStack(alignment: .trailing, spacing: 1) {
+                                Text("CURRENT PASS (kJ/mm)").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
+                                Text(String(format: "%.2f", heatInput)).font(RetroTheme.font(size: 36, weight: .black)).foregroundColor(RetroTheme.primary).shadow(color: RetroTheme.primary.opacity(0.5), radius: 5).minimumScaleFactor(0.8)
+                                if activeJobID != nil {
+                                    Text("• STORING").font(RetroTheme.font(size: 10, weight: .bold)).foregroundColor(.red).blinkEffect()
+                                }
+                            }
+                            .frame(minWidth: 160, alignment: .trailing)
+                        }
+                        .padding(.horizontal)
+                        .zIndex(1000)
+                        
+                        // --- FORMULA INTERFACE ---
+                        VStack(spacing: 15) {
+                            HStack(alignment: .center, spacing: 8) {
+                                VStack(spacing: 0) {
+                                    Text("ISO 17671").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim).padding(4)
+                                    Text(String(format: "%.1f", efficiency)).font(RetroTheme.font(size: 20, weight: .bold)).foregroundColor(RetroTheme.primary).padding(.horizontal, 12).padding(.vertical, 8)
+                                    Text("k-factor").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim).padding(4)
+                                }
+                                Text("×").font(RetroTheme.font(size: 20)).foregroundColor(RetroTheme.dim)
+                                
+                                VStack(spacing: 4) {
+                                    HStack(alignment: .bottom, spacing: 6) {
+                                        SelectableInput(label: "Voltage (V)", value: voltageStr.toDouble, target: .voltage, currentFocus: focusedField, precision: 1) { focusedField = .voltage }
+                                        Text("×").foregroundColor(RetroTheme.dim)
+                                        SelectableInput(label: "Current (A)", value: amperageStr.toDouble, target: .amperage, currentFocus: focusedField, precision: 0) { focusedField = .amperage }
                                     }
-                                    Text("×").font(RetroTheme.font(size: 20)).foregroundColor(RetroTheme.dim)
-                                    
-                                    VStack(spacing: 4) {
-                                        HStack(alignment: .bottom, spacing: 6) {
-                                            SelectableInput(label: "Voltage (V)", value: voltageStr.toDouble, target: .voltage, currentFocus: focusedField, precision: 1) { focusedField = .voltage }
-                                            Text("×").foregroundColor(RetroTheme.dim)
-                                            SelectableInput(label: "Current (A)", value: amperageStr.toDouble, target: .amperage, currentFocus: focusedField, precision: 0) { focusedField = .amperage }
-                                        }
-                                        Rectangle().fill(RetroTheme.primary).frame(height: 2)
-                                        HStack(alignment: .top, spacing: 4) {
-                                            
-                                            SelectableInput(label: "Length (mm)", value: lengthStr.toDouble, target: .length, currentFocus: focusedField, precision: 0) { focusedField = .length }
-                                            Text("/").font(RetroTheme.font(size: 16)).foregroundColor(RetroTheme.dim).padding(.top, 10)
-                                            SelectableInput(label: "time (s)", value: timeStr.toDouble, target: .time, currentFocus: focusedField, precision: 0) { focusedField = .time }
-                                            
-                                            Text("×").foregroundColor(RetroTheme.dim).padding(.top, 10)
-                                            HStack(alignment: .top, spacing: 0) { Text("10").font(RetroTheme.font(size: 16, weight: .bold)); Text("3").font(RetroTheme.font(size: 10, weight: .bold)).baselineOffset(8) }.fixedSize(horizontal: true, vertical: false).foregroundColor(RetroTheme.dim).padding(.top, 8)
-                                        }
-                                        if calculatedSpeed > 0 {
-                                            Text("Speed: \(String(format: "%.0f", calculatedSpeed)) mm/min").font(RetroTheme.font(size: 9)).foregroundColor(RetroTheme.dim).padding(.trailing,  40)
-                                        }
+                                    Rectangle().fill(RetroTheme.primary).frame(height: 2)
+                                    HStack(alignment: .top, spacing: 4) {
+                                        
+                                        SelectableInput(label: "Length (mm)", value: lengthStr.toDouble, target: .length, currentFocus: focusedField, precision: 0) { focusedField = .length }
+                                        Text("/").font(RetroTheme.font(size: 16)).foregroundColor(RetroTheme.dim).padding(.top, 10)
+                                        SelectableInput(label: "time (s)", value: timeStr.toDouble, target: .time, currentFocus: focusedField, precision: 0) { focusedField = .time }
+                                        
+                                        Text("×").foregroundColor(RetroTheme.dim).padding(.top, 10)
+                                        HStack(alignment: .top, spacing: 0) { Text("10").font(RetroTheme.font(size: 16, weight: .bold)); Text("3").font(RetroTheme.font(size: 10, weight: .bold)).baselineOffset(8) }.fixedSize(horizontal: true, vertical: false).foregroundColor(RetroTheme.dim).padding(.top, 8)
+                                    }
+                                    if calculatedSpeed > 0 {
+                                        Text("Speed: \(String(format: "%.0f", calculatedSpeed)) mm/min").font(RetroTheme.font(size: 9)).foregroundColor(RetroTheme.dim).padding(.trailing,  40)
                                     }
                                 }
                             }
-                            .padding()
-                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(RetroTheme.dim, lineWidth: 1).opacity(0.5))
-                            .padding(.horizontal)
-                            .zIndex(1)
+                        }
+                        .padding()
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(RetroTheme.dim, lineWidth: 1).opacity(0.5))
+                        .padding(.horizontal)
+                        .zIndex(1)
+                        
+                        // --- ACTIONS & HISTORY ---
                             
-                            // --- ACTIONS & HISTORY ---
+                        HStack(spacing: 15) {
+                            Button(action: startNewSession) {
+                                VStack(spacing: 2) {
+                                    Text("NEW JOB").font(RetroTheme.font(size: 12, weight: .bold))
+                                    Text("RESET").font(RetroTheme.font(size: 8))
+                                }
+                                .foregroundColor(RetroTheme.primary).frame(width: 80, height: 50).overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1)).background(Color.black)
+                            }
+                            Button(action: logPass) {
+                                HStack {
+                                    Text("LOG PASS #\(passCounter)").font(RetroTheme.font(size: 20, weight: .heavy))
+                                    Spacer()
+                                    Image(systemName: "arrow.right.to.line")
+                                }
+                                .padding().foregroundColor(Color.black).background(heatInput > 0 ? RetroTheme.primary : RetroTheme.dim)
+                            }
+                            .disabled(heatInput == 0)
+                        }
+                        .padding(.horizontal)
+                            
+                            
                             ScrollView {
                                 VStack(alignment: .leading, spacing: 15) {
-                                    HStack(spacing: 15) {
-                                        Button(action: startNewSession) {
-                                            VStack(spacing: 2) {
-                                                Text("NEW JOB").font(RetroTheme.font(size: 12, weight: .bold))
-                                                Text("RESET").font(RetroTheme.font(size: 8))
-                                            }
-                                            .foregroundColor(RetroTheme.primary).frame(width: 80, height: 50).overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1)).background(Color.black)
-                                        }
-                                        Button(action: logPass) {
-                                            HStack {
-                                                Text("LOG PASS #\(passCounter)").font(RetroTheme.font(size: 20, weight: .heavy))
-                                                Spacer()
-                                                Image(systemName: "arrow.right.to.line")
-                                            }
-                                            .padding().foregroundColor(Color.black).background(heatInput > 0 ? RetroTheme.primary : RetroTheme.dim)
-                                        }
-                                        .disabled(heatInput == 0)
-                                    }
-                                    
                                     if !jobHistory.isEmpty {
                                         HStack { Text("> JOB HISTORY").font(RetroTheme.font(size: 14, weight: .bold)).foregroundColor(RetroTheme.primary); Spacer() }.padding(.top, 10)
                                         LazyVStack(spacing: 12) {
@@ -207,7 +209,7 @@ struct HeatInputView: View {
                                 .padding(.bottom, 320)
                             }
                         }
-                    }
+                    
                     
                     // 2. TROMMEL OVERLAY (FLYTENDE & INTERAKTIVT)
                                         if let target = focusedField {
