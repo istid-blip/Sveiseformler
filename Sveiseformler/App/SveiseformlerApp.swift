@@ -26,10 +26,7 @@ struct SveiseformlerApp: App {
             ContentView()
                 // 2. Setter språket i miljøet
                 .environment(\.locale, Locale(identifier: languageCode))
-                // 3. DETTE ER TRIKSET:
-                // Ved å sette .id til språkkoden, tvinger vi hele appen til
-                // å lastes inn på nytt når språket endres.
-                .id(languageCode)
+
         }
         .modelContainer(sharedModelContainer)
     }

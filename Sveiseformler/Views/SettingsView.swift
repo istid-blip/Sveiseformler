@@ -1,30 +1,100 @@
 import SwiftUI
 
-struct LanguageOption: Identifiable, Equatable {
-    let id: String
-    let name: String
+// --- NY KOMPONENT: RETRO SLIDE SWITCH ---
+struct RetroSlideSwitch: View {
+    let title: LocalizedStringKey
+    let leftLabel: String
+    let rightLabel: String
+    @Binding var isLeftSelected: Bool // True = Venstre valg, False = Høyre valg
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Tittel
+            Text(title)
+                .font(RetroTheme.font(size: 14))
+                .foregroundColor(RetroTheme.primary)
+            
+            // Selve bryteren
+            ZStack {
+                // Ramme/Bakgrunn
+                Rectangle()
+                    .stroke(RetroTheme.dim, lineWidth: 1)
+                    .background(Color.black)
+                    .frame(height: 40)
+                
+                GeometryReader { geo in
+                    let width = geo.size.width / 2
+                    
+                    // Den "aktive" blokken som sklir (Invertert farge)
+                    Rectangle()
+                        .fill(RetroTheme.primary)
+                        .frame(width: width, height: geo.size.height)
+                        .offset(x: isLeftSelected ? 0 : width)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isLeftSelected)
+                    
+                    // Tekst-lagene
+                    HStack(spacing: 0) {
+                        // Venstre Valg
+                        Button(action: {
+                            if !isLeftSelected {
+                                isLeftSelected = true
+                                Haptics.selection()
+                            }
+                        }) {
+                            Text(leftLabel)
+                                .font(RetroTheme.font(size: 14, weight: .bold))
+                                // Hvis valgt -> Sort tekst (fordi bakgrunnen er lys), ellers Primary tekst
+                                .foregroundColor(isLeftSelected ? .black : RetroTheme.primary)
+                                .frame(width: width, height: geo.size.height)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        
+                        // Høyre Valg
+                        Button(action: {
+                            if isLeftSelected {
+                                isLeftSelected = false
+                                Haptics.selection()
+                            }
+                        }) {
+                            Text(rightLabel)
+                                .font(RetroTheme.font(size: 14, weight: .bold))
+                                .foregroundColor(!isLeftSelected ? .black : RetroTheme.primary)
+                                .frame(width: width, height: geo.size.height)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .frame(height: 40)
+        }
+        .padding(.vertical, 5)
+    }
 }
 
+// --- HOVEDVIEW ---
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     
     // --- LAGREDE INNSTILLINGER ---
-    // VIKTIG: Endret default fra "no" til "nb" for å matche oversettelsesfilen
     @AppStorage("app_language") private var selectedLanguage: String = "nb"
     @AppStorage("enable_haptics") private var enableHaptics: Bool = true
-    @AppStorage("default_process_code") private var defaultProcess: String = "135/136"
     
-    @State private var showDeleteConfirmation = false
+    // Hjelpe-variabler for SlideSwitchen
+    // Vi mapper app-storage variablene til en Bool for switchen
+    var isNorwegian: Binding<Bool> {
+        Binding(
+            get: { selectedLanguage == "nb" },
+            set: { selectedLanguage = $0 ? "nb" : "en" }
+        )
+    }
     
-    private let languageOptions = [
-        // VIKTIG: Endret id fra "no" til "nb".
-        // Hvis denne er "no", finner ikke iOS oversettelsene dine som ligger under "nb".
-        LanguageOption(id: "nb", name: "NORSK (NO)"),
-        LanguageOption(id: "en", name: "ENGLISH (EN)")
-    ]
-    
-    var currentLanguageOption: LanguageOption {
-        languageOptions.first(where: { $0.id == selectedLanguage }) ?? languageOptions[0]
+    var isHapticsOn: Binding<Bool> {
+        Binding(
+            get: { enableHaptics },
+            set: { enableHaptics = $0 }
+        )
     }
     
     var body: some View {
@@ -35,155 +105,65 @@ struct SettingsView: View {
                 // HEADER
                 HStack {
                     Button(action: { dismiss() }) {
-                        HStack(spacing: 5) { Text("< MAIN MENU") }
+                        HStack(spacing: 5) { Text("< BACK") }
                             .font(RetroTheme.font(size: 14, weight: .bold))
                             .foregroundColor(RetroTheme.primary)
                             .padding(8)
                             .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
                     }
                     Spacer()
-                    Text("MACHINE_SETUP")
+                    Text("SYSTEM_CONFIG")
                         .font(RetroTheme.font(size: 16, weight: .heavy))
                         .foregroundColor(RetroTheme.primary)
                 }
                 .padding()
                 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 30) {
+                    VStack(alignment: .leading, spacing: 40) {
                         
-                        // SECTION 1: LOCALIZATION
-                        SettingsSection(title: "LOCALIZATION") {
-                            HStack(alignment: .top) {
-                                Text("SYSTEM LANGUAGE:")
-                                    .font(RetroTheme.font(size: 14))
-                                    .foregroundColor(RetroTheme.primary)
-                                    .padding(.top, 12)
-                                Spacer()
-                                VStack {
-                                    RetroDropdown(
-                                        title: "LANGUAGE",
-                                        selection: currentLanguageOption,
-                                        options: languageOptions,
-                                        onSelect: { option in
-                                            selectedLanguage = option.id
-                                        },
-                                        itemText: { $0.name },
-                                        itemDetail: nil
-                                    )
-                                }
-                                .frame(width: 160)
-                                .zIndex(100)
-                            }
-                        }
-                        .zIndex(100)
+                        // DEKORATIV LINJE
+                        Rectangle()
+                            .fill(RetroTheme.dim.opacity(0.3))
+                            .frame(height: 1)
                         
-                        // SECTION 2: I/O CONFIG
-                        SettingsSection(title: "I/O CONFIG") {
-                            RetroToggleRow(title: "HAPTIC FEEDBACK", isOn: $enableHaptics)
-                        }
-                        .zIndex(90)
+                        // SECTION: LANGUAGE
+                        RetroSlideSwitch(
+                            title: "SYSTEM LANGUAGE",
+                            leftLabel: "NORSK (NO)",
+                            rightLabel: "ENGLISH (EN)",
+                            isLeftSelected: isNorwegian
+                        )
                         
-                        // SECTION 3: DEFAULTS
-                        SettingsSection(title: "DEFAULTS") {
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text("DEFAULT PROCESS CODE:")
-                                    .font(RetroTheme.font(size: 12))
-                                    .foregroundColor(RetroTheme.dim)
-                                TextField("135...", text: $defaultProcess)
-                                    .font(RetroTheme.font(size: 14))
-                                    .foregroundColor(RetroTheme.primary)
-                                    .padding(8)
-                                    .background(Color.black)
-                                    .overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
-                            }
-                        }
-                        .zIndex(80)
+                        // SECTION: HAPTICS
+                        // Merk: Logikken her er litt annerledes siden "PÅ" ofte føles naturlig til høyre,
+                        // men switchen tar "Venstre/Høyre".
+                        // Her: Venstre = PÅ, Høyre = AV (eller omvendt etter preferanse).
+                        // La oss kjøre: Venstre = ON, Høyre = OFF for å matche "1" og "0".
+                        RetroSlideSwitch(
+                            title: "HAPTIC FEEDBACK (VIBRATION)",
+                            leftLabel: "ENABLED [1]",
+                            rightLabel: "DISABLED [0]",
+                            isLeftSelected: isHapticsOn
+                        )
+
+                        Spacer()
                         
-                        // SECTION 4: RESET
-                        SettingsSection(title: "MEMORY BANK") {
-                            Button(action: { showDeleteConfirmation = true }) {
-                                HStack {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                    Text("FACTORY RESET / WIPE DATA")
-                                }
-                                .font(RetroTheme.font(size: 12, weight: .bold))
-                                .foregroundColor(.red)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .overlay(Rectangle().stroke(Color.red, lineWidth: 1))
-                            }
-                        }
-                        .zIndex(70)
-                        
-                        // FOOTER
-                        VStack(spacing: 5) {
+                        // INFO FOOTER
+                        VStack(spacing: 8) {
+                            Text("TERMINAL ID: \(UUID().uuidString.prefix(4))-\(UUID().uuidString.prefix(4))")
                             Text("Sveiseformler v1.0.2")
-                            Text("System ID: \(UUID().uuidString.prefix(8))")
                         }
                         .font(RetroTheme.font(size: 10))
                         .foregroundColor(RetroTheme.dim)
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 20)
+                        .padding(.top, 50)
                     }
-                    .padding()
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
                 }
             }
         }
-        .crtScreen()
+        .crtScreen() // Din eksisterende CRT effekt
         .navigationBarHidden(true)
-        .alert("CONFIRM WIPE", isPresented: $showDeleteConfirmation) {
-            Button("CANCEL", role: .cancel) { }
-            Button("DELETE EVERYTHING", role: .destructive) { }
-        } message: {
-            Text("This will permanently delete all saved weld logs and jobs.")
-        }
-    }
-}
-
-struct SettingsSection<Content: View>: View {
-    let title: LocalizedStringKey // <--- ENDRET FRA String TIL LocalizedStringKey
-    let content: Content
-    
-    // Vi endrer init til å ta imot LocalizedStringKey
-    init(title: LocalizedStringKey, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            // Vi fjerner " > " fra interpolation og legger den i Text,
-            // slik at selve tittelen kan oversettes.
-            HStack(spacing: 0) {
-                Text("> ")
-                Text(title) // Nå oversettes tittelen automatisk!
-            }
-            .font(RetroTheme.font(size: 12, weight: .bold))
-            .foregroundColor(RetroTheme.dim)
-            
-            content
-        }
-    }
-}
-
-struct RetroToggleRow: View {
-    let title: LocalizedStringKey
-    @Binding var isOn: Bool
-    
-    var body: some View {
-        HStack {
-            Text(title).font(RetroTheme.font(size: 14)).foregroundColor(RetroTheme.primary)
-            Spacer()
-            Button(action: {
-                isOn.toggle()
-                if isOn { Haptics.play(.medium) }
-            }) {
-                HStack(spacing: 8) {
-                    Text(isOn ? "[ ON ]" : "  OFF  ").font(RetroTheme.font(size: 14, weight: .bold))
-                    Circle().fill(isOn ? RetroTheme.primary : Color.clear).stroke(RetroTheme.primary, lineWidth: 1).frame(width: 8, height: 8)
-                }
-                .padding(.vertical, 4).padding(.horizontal, 8).foregroundColor(isOn ? RetroTheme.primary : RetroTheme.dim).overlay(Rectangle().stroke(RetroTheme.dim.opacity(0.5), lineWidth: 1))
-            }
-        }
     }
 }
