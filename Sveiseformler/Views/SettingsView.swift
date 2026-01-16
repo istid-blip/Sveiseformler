@@ -105,14 +105,14 @@ struct SettingsView: View {
                 // HEADER
                 HStack {
                     Button(action: { dismiss() }) {
-                        HStack(spacing: 5) { Text("< BACK") }
-                            .font(RetroTheme.font(size: 14, weight: .bold))
+                        HStack(spacing: 5) { Text("< MAIN MENU") }
+                            .font(RetroTheme.font(size: 16, weight: .bold))
                             .foregroundColor(RetroTheme.primary)
                             .padding(8)
                             .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
                     }
                     Spacer()
-                    Text("SYSTEM_CONFIG")
+                    Text("CONFIGURATION")
                         .font(RetroTheme.font(size: 16, weight: .heavy))
                         .foregroundColor(RetroTheme.primary)
                 }

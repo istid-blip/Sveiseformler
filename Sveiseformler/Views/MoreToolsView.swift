@@ -47,12 +47,3 @@ struct MoreToolsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-#Preview {
-    NavigationView {
-        ZStack {
-            RetroTheme.background.ignoresSafeArea()
-            MoreToolsView(features: [.schaeffler, .depositionRate], startIndex: 3)
-        }
-    }
-}

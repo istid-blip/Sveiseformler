@@ -86,21 +86,21 @@ struct HeatInputView: View {
             
             VStack(spacing: 0) {
                 // --- HEADER ---
+                // HEADER
                 HStack {
                     Button(action: { dismiss() }) {
-                        Text("< MENU")
-                            .font(RetroTheme.font(size: 14, weight: .bold))
+                        HStack(spacing: 5) { Text("< MAIN MENU") }
+                            .font(RetroTheme.font(size: 16, weight: .bold))
                             .foregroundColor(RetroTheme.primary)
                             .padding(8)
                             .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
                     }
                     Spacer()
-                    Text("HEAT_INPUT_CALC")
+                    Text("HEAT INPUT")
                         .font(RetroTheme.font(size: 16, weight: .heavy))
                         .foregroundColor(RetroTheme.primary)
                 }
                 .padding()
-                .zIndex(1)
                 
                 // --- MAIN CONTENT ---
                 ZStack(alignment: .bottom) {
@@ -136,9 +136,7 @@ struct HeatInputView: View {
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text("PROCESS").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
                                     RetroDropdown(title: "PROCESS", selection: currentProcess, options: processes, onSelect: { selectProcess($0) }, itemText: { $0.name }, itemDetail: { "ISO 4063: \($0.code)" })
-                                    if calculatedSpeed > 0 {
-                                        Text("Speed: \(String(format: "%.0f", calculatedSpeed)) mm/min").font(RetroTheme.font(size: 9)).foregroundColor(RetroTheme.dim).padding(.top, 4)
-                                    }
+
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 
@@ -158,10 +156,10 @@ struct HeatInputView: View {
                                 HStack(alignment: .center, spacing: 8) {
                                     VStack(spacing: 0) {
                                         Text("ISO 17671").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim).padding(4)
-                                        Text(String(format: "%.1f", efficiency)).font(RetroTheme.font(size: 20, weight: .bold)).foregroundColor(RetroTheme.primary).padding(.horizontal, 12).padding(.vertical, 8).overlay(Rectangle().stroke(RetroTheme.dim, lineWidth: 1))
+                                        Text(String(format: "%.1f", efficiency)).font(RetroTheme.font(size: 20, weight: .bold)).foregroundColor(RetroTheme.primary).padding(.horizontal, 12).padding(.vertical, 8)
                                         Text("k-factor").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim).padding(4)
                                     }
-                                    Text("×").font(RetroTheme.font(size: 20)).foregroundColor(RetroTheme.primary)
+                                    Text("×").font(RetroTheme.font(size: 20)).foregroundColor(RetroTheme.dim)
                                     
                                     VStack(spacing: 4) {
                                         HStack(alignment: .bottom, spacing: 6) {
@@ -178,6 +176,9 @@ struct HeatInputView: View {
                                             
                                             Text("×").foregroundColor(RetroTheme.dim).padding(.top, 10)
                                             HStack(alignment: .top, spacing: 0) { Text("10").font(RetroTheme.font(size: 16, weight: .bold)); Text("3").font(RetroTheme.font(size: 10, weight: .bold)).baselineOffset(8) }.fixedSize(horizontal: true, vertical: false).foregroundColor(RetroTheme.dim).padding(.top, 8)
+                                        }
+                                        if calculatedSpeed > 0 {
+                                            Text("Speed: \(String(format: "%.0f", calculatedSpeed)) mm/min").font(RetroTheme.font(size: 9)).foregroundColor(RetroTheme.dim).padding(.trailing,  40)
                                         }
                                     }
                                 }

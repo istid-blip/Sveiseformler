@@ -13,20 +13,19 @@ enum AppFeature: String, Identifiable, CaseIterable {
     case schaeffler
     case depositionRate
     case dictionary
-    case wideverticaljogger
+
     
     var id: String { rawValue }
     
     // ENDRING: Endret fra String til LocalizedStringKey
     var title: LocalizedStringKey {
         switch self {
-        case .heatInput: return "HEAT INPUT CALC"
-        case .carbonEquivalent: return "CARBON EQUIV."
-        case .schaeffler: return "SCHAEFFLER CALC"
+        case .heatInput: return "HEAT INPUT"
+        case .carbonEquivalent: return "CARBON EQUIVALENT"
+        case .schaeffler: return "SCHAEFFLER"
         case .depositionRate: return "DEPOSITION RATE"
-        case .dictionary: return "WELD DICTIONARY"
-        // Fikset skrivefeil ("vide" -> "WIDE") og satte til store bokstaver
-        case .wideverticaljogger: return "WIDE VERTICAL JOGGER"
+        case .dictionary: return "DICTIONARY"
+
         }
     }
     
@@ -38,7 +37,7 @@ enum AppFeature: String, Identifiable, CaseIterable {
         case .schaeffler: SchaefflerView()
         case .depositionRate: DepositionRateView()
         case .dictionary: DictionaryView()
-        case .wideverticaljogger: WideVerticalJogger()
+
         }
     }
 }
