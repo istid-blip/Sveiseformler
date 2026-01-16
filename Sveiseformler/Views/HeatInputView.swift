@@ -96,6 +96,9 @@ struct HeatInputView: View {
                             .overlay(Rectangle().stroke(RetroTheme.primary, lineWidth: 1))
                     }
                     Spacer()
+
+                    
+                    Spacer()
                     Text("HEAT INPUT")
                         .font(RetroTheme.font(size: 16, weight: .heavy))
                         .foregroundColor(RetroTheme.primary)
@@ -109,28 +112,6 @@ struct HeatInputView: View {
                     ScrollView {
                         VStack(spacing: 25) {
                             
-                            // JOB NAME INPUT
-                            HStack {
-                                Text("JOB:")
-                                    .font(RetroTheme.font(size: 12))
-                                    .foregroundColor(RetroTheme.dim)
-                                TextField("UNTITLED JOB...", text: $currentJobName)
-                                    .font(RetroTheme.font(size: 14, weight: .bold))
-                                    .foregroundColor(RetroTheme.primary)
-                                    .accentColor(RetroTheme.primary)
-                                    .onChange(of: currentJobName) { _, newName in
-                                        if let id = activeJobID, let job = jobHistory.first(where: { $0.id == id }) {
-                                            job.name = newName
-                                        }
-                                    }
-                                
-                                if activeJobID != nil {
-                                    Text("• REC").font(RetroTheme.font(size: 10, weight: .bold)).foregroundColor(.red).blinkEffect()
-                                }
-                            }
-                            .padding(.horizontal)
-                            .padding(.bottom, -10)
-                            
                             // PROCESS & RESULT
                             HStack(alignment: .top, spacing: 0) {
                                 VStack(alignment: .leading, spacing: 5) {
@@ -142,9 +123,12 @@ struct HeatInputView: View {
                                 
                                 Spacer(minLength: 20)
                                 
-                                VStack(alignment: .trailing, spacing: 5) {
+                                VStack(alignment: .trailing, spacing: 1) {
                                     Text("CURRENT PASS (kJ/mm)").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
                                     Text(String(format: "%.2f", heatInput)).font(RetroTheme.font(size: 36, weight: .black)).foregroundColor(RetroTheme.primary).shadow(color: RetroTheme.primary.opacity(0.5), radius: 5).minimumScaleFactor(0.8)
+                                    if activeJobID != nil {
+                                        Text("• STORING").font(RetroTheme.font(size: 10, weight: .bold)).foregroundColor(.red).blinkEffect()
+                                    }
                                 }
                                 .frame(minWidth: 160, alignment: .trailing)
                             }
@@ -255,7 +239,7 @@ struct HeatInputView: View {
                                                     )
                                                     .padding(.bottom, 50) // Løfter hjulet opp fra bunnen
                                                 }
-                                                .frame(height: 380) // <-- VIKTIG: Juster denne høyden!
+                                                .frame(height: 340) // <-- VIKTIG: Juster denne høyden!
                                                 // Denne høyden må være høy nok til å dekke historikken,
                                                 // men lav nok til at den ikke dekker tall-knappene dine.
                                             }
@@ -333,14 +317,7 @@ struct HeatInputView: View {
         case .voltage: return 0.1
         default: return 1.0
         }
-    }
-    func title(for field: InputTarget) -> String {
-        switch field {
-        case .voltage: return "ADJUSTING VOLTAGE (V)"
-        case .amperage: return "ADJUSTING AMPERAGE (A)"
-        case .time: return "ADJUSTING TIME (s)"
-        case .length: return "ADJUSTING LENGTH (mm)"
-        }
+    
     }
     func selectProcess(_ process: WeldingProcess) {
         selectedProcessName = process.name
