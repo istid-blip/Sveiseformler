@@ -126,7 +126,7 @@ struct HeatInputView: View {
                                 Text("CURRENT PASS (kJ/mm)").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
                                 Text(String(format: "%.2f", heatInput)).font(RetroTheme.font(size: 36, weight: .black)).foregroundColor(RetroTheme.primary).shadow(color: RetroTheme.primary.opacity(0.5), radius: 5).minimumScaleFactor(0.8)
                                 if activeJobID != nil {
-                                    Text("• STORING").font(RetroTheme.font(size: 10, weight: .bold)).foregroundColor(.red).blinkEffect()
+                                    Text("• LOGGING").font(RetroTheme.font(size: 10, weight: .bold)).foregroundColor(.red).blinkEffect()
                                 }
                             }
                             .frame(minWidth: 160, alignment: .trailing)
@@ -399,7 +399,7 @@ struct RetroJobRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(job.name).font(RetroTheme.font(size: 16, weight: .bold)).foregroundColor(isActive ? Color.green : RetroTheme.primary)
-                    if isActive { Text("• ACTIVE").font(RetroTheme.font(size: 9, weight: .bold)).foregroundColor(.green) }
+                    if isActive { Text("• LOGGING").font(RetroTheme.font(size: 9, weight: .bold)).foregroundColor(.green) }
                 }
                 Text("\(job.passes.count) passes recorded").font(RetroTheme.font(size: 10)).foregroundColor(RetroTheme.dim)
             }
