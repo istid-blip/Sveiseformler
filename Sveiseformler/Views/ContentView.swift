@@ -117,7 +117,41 @@ private extension ContentView {
                 }
                 .retroButtonStyle()
             }
-            
+            NavigationLink(destination: StopwatchDesignExplorer()) {
+                HStack(spacing: 15) {
+                    // Ikon
+                    ZStack {
+                        Circle()
+                            .fill(Color.red.opacity(0.2))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "timer")
+                            .font(.title2)
+                            .foregroundColor(.red)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("STOPWATCH TEST")
+                            .font(RetroTheme.font(size: 16, weight: .bold))
+                            .foregroundColor(RetroTheme.primary)
+                        
+                        Text("REACTOR DESIGN PROTOTYPE")
+                            .font(RetroTheme.font(size: 8))
+                            .foregroundColor(RetroTheme.dim)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(RetroTheme.dim)
+                }
+                .padding()
+                .background(Color.black.opacity(0.5))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(RetroTheme.dim, lineWidth: 1)
+                )
+            }
+            .padding(.horizontal)
         }
     }
     
